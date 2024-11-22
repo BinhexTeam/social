@@ -1,0 +1,25 @@
+{
+    "name": "Ollama integration",
+    "version": "16.0.1.0.0",
+    "summary": "Integration with Ollama for enhanced interaction within Odoo",
+    "category": "Tools",
+    "author": "Binhex, Odoo Community Association (OCA)",
+    "maintainers": ["arielbarreiros96"],
+    "website": "https://github.com/OCA/social",
+    "license": "AGPL-3",
+    "depends": [
+        "base",
+        "mail",
+        "im_livechat",
+        "queue_job",
+    ],
+    "data": [
+        "views/res_config_settings_views.xml",
+        "views/res_users_views.xml",
+        "data/user_data.xml",
+    ],
+    "installable": True,
+    "application": False,
+    "auto_install": True,
+    "repository": "https://github.com/BinhexTeam/custom_openai_connector",
+}

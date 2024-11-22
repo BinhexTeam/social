@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="res_config_settings_view_form_ollama" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.ollama</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="base_setup.res_config_settings_view_form" />
+        <field name="arch" type="xml">
+            <div id="emails" position="after">
+                <h2>Ollama Integration</h2>
+                <div class="row mt16 o_settings_container" id="ollama_settings">
+                    <div class="col-12 col-lg-6 o_setting_box">
+                        <div class="o_setting_right_pane">
+                            <label for="ollama_api_url" string="Ollama API URL" />
+                            <field
+                                name="ollama_api_url"
+                                placeholder="Enter your Ollama API URL here"
+                            />
+                            <div class="mt8">
+                                <button
+                                    name="action_test_ollama_connection"
+                                    type="object"
+                                    string="Test Connection"
+                                    class="btn-primary"
+                                />
+                            </div>
+                            <p class="text-muted">
+                                Test the connection with Ollama to ensure the API URL is valid.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-12 col-lg-6 o_setting_box">
+                        <div class="o_setting_right_pane">
+                            <label for="ollama_model" string="Ollama Model" />
+                            <field name="ollama_model" placeholder="e.g., llama3.2" />
+                            <p class="text-muted">
+                                Specify the model you want to use with Ollama.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </field>
+    </record>
+</odoo>

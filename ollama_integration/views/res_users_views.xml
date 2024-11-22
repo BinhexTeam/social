@@ -1,0 +1,19 @@
+<odoo>
+    <record model="ir.ui.view" id="ollama_user_bot">
+        <field name="name">ollama_user_bot</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='signature']/.." position="after">
+                <group name="ollama">
+                    <field name="is_ollama_bot" string="Is Ollama Bot" />
+                    <field
+                        name="ollama_model"
+                        string="Ollama Model"
+                        attrs="{'invisible': [('is_ollama_bot', '=', False)]}"
+                    />
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>
