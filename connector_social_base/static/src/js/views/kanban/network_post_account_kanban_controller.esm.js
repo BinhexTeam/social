@@ -4,7 +4,7 @@ import {onWillStart, useSubEnv} from "@odoo/owl";
 import {KanbanController} from "@web/views/kanban/kanban_controller";
 import {SocialNetworkAccount} from "@connector_social_base/js/components/components.esm";
 import {_t} from "@web/core/l10n/translation";
-import useService from "@web/core/utils/hooks";
+import {useService} from "@web/core/utils/hooks";
 
 export class NetworkPostAccountKanbanController extends KanbanController {
     setup() {
