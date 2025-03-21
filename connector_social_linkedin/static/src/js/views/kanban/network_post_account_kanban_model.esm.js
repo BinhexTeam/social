@@ -4,9 +4,13 @@ import {NetworkPostAccountKanbanModel} from "@connector_social_base/js/views/kan
 import {patch} from "@web/core/utils/patch";
 
 patch(NetworkPostAccountKanbanModel.prototype, {
+    /**
+     * Handles the like button click for a post in the kanban view
+     * @param {Object} record - the current record
+     * @returns {Promise} resolves with the result of the RPC call
+     */
     async onLikePost(record) {
         super.onLikePost();
-        console.warn(this);
         const post_id = record.id.value;
         const author_urn = record.linkedin_account_urn.value;
         return await this.orm.silent.call(

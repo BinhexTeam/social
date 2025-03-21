@@ -177,8 +177,8 @@ class SocialNetworkAccount(models.Model):
                         "post_account_url": message[1],
                         "message": message[0],
                         "account_id": account.id,
-                        "likes_count": 0,
-                        "comments_count": 0,
+                        "like_count": 0,
+                        "comment_count": 0,
                         "actor_urn": val_x.author_id,
                     }
 
@@ -200,9 +200,9 @@ class SocialNetworkAccount(models.Model):
                         "name",
                         "company_id",
                         "media_id",
-                        "total_views",
+                        "impression_count",
                         "interactions_count",
-                        "engagement_rate",
+                        "engagement",
                     ],
                 ),
             )

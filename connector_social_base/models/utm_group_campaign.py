@@ -6,6 +6,7 @@ from odoo import fields, models
 
 class UtmGroupCampaign(models.Model):
     _name = "utm.group.campaign"
+    _description = "UTM Group Campaign"
 
     name = fields.Char()
     linkedin_urn = fields.Char(string="Linkedin URN")

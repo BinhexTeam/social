@@ -19,7 +19,7 @@
     "assets": {
         "web.assets_backend": [
             # COMPONENTS
-            "connector_social_x/static/src/js/components/**/*.js",
+            "connector_social_x/static/src/components/**/*.js",
             # SERVICES
             "connector_social_x/static/src/js/services/**/*.js",
         ],

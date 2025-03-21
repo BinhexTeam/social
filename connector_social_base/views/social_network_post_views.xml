@@ -61,8 +61,8 @@
                                     <field name="message" />
                                     <field name="published_date" />
                                     <field name="image_urls" />
-                                    <field name="comments_count" />
-                                    <field name="likes_count" />
+                                    <field name="comment_count" />
+                                    <field name="like_count" />
                                     <field name="post_account_url" />
                                     <field name="author" />
                                     <field name="media_type" />
@@ -124,6 +124,10 @@
                 <field name="image_urls" />
                 <field name="count_post_likes" />
                 <field name="count_post_comments" />
+                <field name="count_post_clicks" />
+                <field name="count_post_impression" />
+                <field name="count_post_interactions" />
+                <field name="count_post_engagement" />
                 <templates>
                     <t t-name="kanban-box">
                         <div class="oe_kanban_global_click rounded">
@@ -178,12 +182,14 @@
                                     </t>
                                 </div>
                                 <hr />
-                                <span>Clicks: 0</span>
-                                <span>Likes: <t
-                                        t-esc="record.count_post_likes.raw_value"
+                                <span>Clicks: <t
+                                        t-esc="record.count_post_clicks.raw_value"
                                     /></span>
-                                <span>Comments: <t
-                                        t-esc="record.count_post_comments.raw_value"
+                                <span>Interactions: <t
+                                        t-esc="record.count_post_interactions.raw_value"
+                                    /></span>
+                                <span>Engagement: <t
+                                        t-esc="record.count_post_engagement.raw_value"
                                     /></span>
                             </div>
                         </div>

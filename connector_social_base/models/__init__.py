@@ -3,11 +3,11 @@
 
 from . import (
     connector_social_base_mixin,
+    social_network_post_mixin,
     social_network_account,
     social_network_media,
     social_network_post,
     social_network_post_account,
-    social_network_post_mixin,
     utm_campaign,
     utm_group_campaign,
 )

@@ -7,6 +7,7 @@ import requests
 from werkzeug.urls import url_encode
 
 from odoo import _, fields, models
+from odoo.exceptions import ValidationError
 
 from ..social_x_utils import _get_oauth
 
@@ -57,3 +58,24 @@ class SocialMediaOca(models.Model):
             return self._get_url_authorize()
         else:
             return result
+
+    def _action_valid_add_account(self):
+        result = super()._action_valid_add_account()
+        if self.media_type == "x":
+            if self._get_account_by_media() == 0:
+                irConfigParameter = self.env["ir.config_parameter"].sudo()
+                client_id = irConfigParameter.get_param(
+                    f"connector_social_{self.media_type}.{self.media_type}_api_key", ""
+                )
+                if client_id:
+                    result = False
+                else:
+                    raise ValidationError(
+                        _(
+                            "You must provide a Api KEY and Api Secret before setting "
+                            "up your account. Go to Social/Settings."
+                        )
+                    )
+            else:
+                result = True
+        return result

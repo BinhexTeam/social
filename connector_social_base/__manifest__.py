@@ -18,25 +18,34 @@
         "views/social_network_post_account_views.xml",
         "views/utm_campaign_views.xml",
         "views/utm_group_campaign_views.xml",
+        "views/social_network_action_client_views.xml",
         "views/res_config_settings_views.xml",
         "views/connector_social_base_menus.xml",
     ],
     "assets": {
         "web.assets_backend": [
+            # LIBS
+            "connector_social_base/static/src/lib/**/*.js",
             # GENERAL
             "connector_social_base/static/src/xml/**/*.xml",
             "connector_social_base/static/src/scss/**/*.scss",
-            "connector_social_base/static/src/js/**/*.js",
+            # MIXINS
+            "connector_social_base/static/src/js/app/**/*.js",
             # SERVICES
             "connector_social_base/static/src/js/services/**/*.js",
             # COMPONENTS
-            "connector_social_base/static/src/js/components/**/*.xml",
-            "connector_social_base/static/src/js/components/**/*.js",
-            "connector_social_base/static/src/js/components/**/*.scss",
+            "connector_social_base/static/src/components/**/*.xml",
+            "connector_social_base/static/src/components/**/*.js",
+            "connector_social_base/static/src/components/**/*.scss",
             # VIEWS
             "connector_social_base/static/src/js/views/**/*.xml",
             "connector_social_base/static/src/js/views/**/*.scss",
             "connector_social_base/static/src/js/views/**/*.js",
+        ],
+    },
+    "external_dependencies": {
+        "python": [
+            "pandas",
         ],
     },
 }

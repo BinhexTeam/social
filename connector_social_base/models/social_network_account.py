@@ -4,7 +4,6 @@
 import json
 
 from odoo import api, fields, models
-from odoo.tools import float_is_zero
 
 
 class SocialNetworkAccount(models.Model):
@@ -28,19 +27,26 @@ class SocialNetworkAccount(models.Model):
     post_account_ids = fields.One2many("social.network.post.account", "account_id")
 
     # STATISTICS
+    comment_count = fields.Integer()
+    like_count = fields.Integer()
+    click_count = fields.Integer()
+    share_count = fields.Integer()
     interactions_count = fields.Integer(
+        compute="_compute_interactions_count",
+        store=True,
         help="""
             Indicates the interactions with the
             publication (clicks, likes, comments,shares).
-        """
+        """,
     )
-    total_views = fields.Integer(
+    impression_count = fields.Integer(
         help="""
             Total number of views, which may include
             multiple views by the same user.
         """
     )
-    engagement_rate = fields.Float(compute="_compute_engagement_rate", store=True)
+    engagement = fields.Float()
+
     account_url = fields.Char(compute="_compute_account_url", store=True)
     enviroment = fields.Selection(
         [("test", "Test"), ("production", "Production")], default="test"
@@ -51,6 +57,14 @@ class SocialNetworkAccount(models.Model):
     refresh_access_token = fields.Char()
     is_valid_token_access = fields.Boolean(default=False)
     expire_access_token_date = fields.Date()
+
+    def _compute_display_name(self):
+        for account in self:
+            account.display_name = (
+                f"[{account.media_type.upper()}] {account.name}"
+                if account.media_type
+                else account.name
+            )
 
     def _fields_account_url(self):
         return []
@@ -63,15 +77,23 @@ class SocialNetworkAccount(models.Model):
                     val_url[1] if account.media_id.media_type in val_url[0] else ""
                 )
 
-    @api.depends("interactions_count", "total_views")
-    def _compute_engagement_rate(self):
+    @api.depends("click_count", "like_count", "share_count", "comment_count")
+    def _compute_interactions_count(self):
         for account in self:
-            account.engagement_rate = float_is_zero(
-                account.interactions_count / account.total_views
-                if account.total_views > 0
-                else 0,
-                2,
+            account.interactions_count = (
+                account.click_count
+                + account.like_count
+                + account.share_count
+                + account.comment_count
             )
+
+    def _get_chart_account_statistics(self, start_date, end_date, granularity):
+        return []
+
+    def get_chart_account_statistics(
+        self, start_date=None, end_date=None, granularity="WEEK"
+    ):
+        return self._get_chart_account_statistics(start_date, end_date, granularity)
 
     def _update_posts_statistics(self, update_all_accounts):
         return []
@@ -84,3 +106,9 @@ class SocialNetworkAccount(models.Model):
 
     def validate_active_access_token(self):
         pass
+
+    def _load_ads_accounts(self):
+        return {}
+
+    def load_ads_accounts(self):
+        return self._load_ads_accounts()

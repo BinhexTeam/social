@@ -6,7 +6,7 @@ from odoo import fields, models
 
 class SocialNetworkPostAccount(models.Model):
     _name = "social.network.post.account"
-    _inherit = ["mail.thread", "mail.activity.mixin", "social.network.post.mixin"]
+    _inherit = "social.network.post.mixin"
     _description = "Social Live Post"
 
     post_id = fields.Many2one("social.network.post", ondelete="restrict")
@@ -31,8 +31,14 @@ class SocialNetworkPostAccount(models.Model):
     published_date = fields.Datetime()
     published = fields.Boolean(default=True)
     message = fields.Text(required=True)
-    comments_count = fields.Integer()
-    likes_count = fields.Integer()
+
+    comment_count = fields.Integer()
+    like_count = fields.Integer()
+    click_count = fields.Integer()
+    share_count = fields.Integer()
+    impression_count = fields.Float()
+    engagement = fields.Float()
+
     video_ids = fields.Many2many(
         "ir.attachment",
         relation="social_network_post_account_video_rel",
@@ -74,7 +80,7 @@ class SocialNetworkPostAccount(models.Model):
     def filter_by_media_types(self, media_types):
         return self.env["social.network.post.account"].search(
             [
-                ("account_id.media_type", "in", media_types),
+                ("media_type", "in", media_types),
                 ("state", "in", ("ready", "failed")),
             ]
         )

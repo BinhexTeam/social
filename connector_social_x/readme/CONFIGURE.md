@@ -1,16 +1,19 @@
-### To configure this module, you need to:
+To configure this module, you need to:
+---------------
 
 Please note that you must have a developer account previously
 set up to perform the configuration described below.
 Learn more at [X Developer Portal](https://developer.x.com)
 
-### Registering the Client ID and Client Secret.
+Registering the Client ID and Client Secret.
+---------------
 
 - Go to *Social Marketing* > Configuration > Settings
 - Activate LinkedIn Account > save
   ![API_KEY_SECRET](/connector_social_x/static/img/readme/API_KEY_SECRET.png)
 
-### Integration of a user account.
+Integration of a user account.
+---------------
 
 - Go to *Social Marketing* > Configuration > Social networks
 - Click on the *Associate account* button the social network LinkedIn
