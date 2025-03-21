@@ -1,0 +1,44 @@
+.dialog-post-comment {
+    @include border-radius(1.5rem);
+}
+
+img.img-post-comment {
+    width: 160px !important;
+    height: 160px !important;
+}
+
+div.dialog_social_comment {
+    div.post-comments {
+        background-color: rgba(0, 0, 0, 0.03) !important;
+        @include border-radius(2rem);
+    }
+
+    div.o-dropdown {
+        button.dropdown-toggle {
+            border: 0 !important;
+        }
+    }
+
+    div.social-post-comment {
+        border: 1px solid $o-community-color !important;
+
+        textarea {
+            resize: none;
+            height: 60px !important;
+
+            &:focus {
+                box-shadow: none !important;
+            }
+        }
+
+        button.remove-comment-image {
+            width: 15% !important;
+            top: 10% !important;
+            left: 85% !important;
+
+            &:hover {
+                background-color: #400aef8a !important;
+            }
+        }
+    }
+}
