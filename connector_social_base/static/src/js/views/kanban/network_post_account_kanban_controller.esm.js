@@ -2,7 +2,7 @@
 
 import {onWillStart, useSubEnv} from "@odoo/owl";
 import {KanbanController} from "@web/views/kanban/kanban_controller";
-import {SocialNetworkAccount} from "@connector_social_base/js/components/components.esm";
+import {SocialNetworkAccount} from "@connector_social_base/components/components.esm";
 import {_t} from "@web/core/l10n/translation";
 import {useService} from "@web/core/utils/hooks";
 
@@ -24,7 +24,9 @@ export class NetworkPostAccountKanbanController extends KanbanController {
     }
 
     _onAddAccount() {
-        return;
+        return this.actionService.doAction(
+            "connector_social_base.social_media_act_window_kanban"
+        );
     }
 
     _onAddPost() {

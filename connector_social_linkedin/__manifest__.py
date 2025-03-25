@@ -21,7 +21,7 @@
     "assets": {
         "web.assets_backend": [
             # COMPONENTS
-            "connector_social_linkedin/static/src/js/components/**/*.js",
+            "connector_social_linkedin/static/src/components/**/*.js",
             # SERVICES
             "connector_social_linkedin/static/src/js/services/**/*.js",
             # KANBAN
