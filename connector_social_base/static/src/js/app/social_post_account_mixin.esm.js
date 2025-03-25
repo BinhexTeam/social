@@ -1,5 +1,5 @@
 /** @odoo-module */
-import {SocialNetworkImagesDialog} from "../components/components.esm";
+import {SocialNetworkImagesDialog} from "../../components/components.esm";
 import {_t} from "@web/core/l10n/translation";
 
 export const SocialPostAccountMixin = (T) =>

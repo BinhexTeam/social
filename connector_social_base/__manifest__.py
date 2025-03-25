@@ -30,9 +30,9 @@
             # SERVICES
             "connector_social_base/static/src/js/services/**/*.js",
             # COMPONENTS
-            "connector_social_base/static/src/js/components/**/*.xml",
-            "connector_social_base/static/src/js/components/**/*.js",
-            "connector_social_base/static/src/js/components/**/*.scss",
+            "connector_social_base/static/src/components/**/*.xml",
+            "connector_social_base/static/src/components/**/*.js",
+            "connector_social_base/static/src/components/**/*.scss",
             # VIEWS
             "connector_social_base/static/src/js/views/**/*.xml",
             "connector_social_base/static/src/js/views/**/*.scss",
