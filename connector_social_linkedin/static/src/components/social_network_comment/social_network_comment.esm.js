@@ -1,6 +1,6 @@
 /** @odoo-module **/
 
-import {SocialNetworkComment} from "@connector_social_base/js/components/social_network_comment/social_network_comment.esm";
+import {SocialNetworkComment} from "@connector_social_base/components/social_network_comment/social_network_comment.esm";
 import {patch} from "@web/core/utils/patch";
 import {useService} from "@web/core/utils/hooks";
 

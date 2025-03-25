@@ -1,7 +1,7 @@
 /** @odoo-module **/
 import {onWillStart, useEffect, useRef} from "@odoo/owl";
 import {KanbanRecord} from "@web/views/kanban/kanban_record";
-import {SocialNetworkCommentDialog} from "@connector_social_base/js/components/social_network_comment_dialog/social_network_comment_dialog.esm";
+import {SocialNetworkCommentDialog} from "@connector_social_base/components/social_network_comment_dialog/social_network_comment_dialog.esm";
 import {SocialPostAccountMixin} from "@connector_social_base/js/app/connector_social_base_mixins.esm";
 import {_t} from "@web/core/l10n/translation";
 import {useService} from "@web/core/utils/hooks";
