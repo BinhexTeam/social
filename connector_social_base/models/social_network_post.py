@@ -170,7 +170,12 @@ class SocialNetworkPost(models.Model):
                     "post_account_ids": post._prepare_post_account_values(),
                 }
             )
-        self.post_account_ids[0]._action_post()
+            post.post_account_ids[0]._action_post()
+            post.write(
+                {
+                    "state": "published",
+                }
+            )
 
     def _run_send_post(self):
         post_accounts = self.env["social.network.post"].search(

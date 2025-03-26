@@ -52,6 +52,10 @@ class SocialNetworkAccount(models.Model):
     is_valid_token_access = fields.Boolean(default=False)
     expire_access_token_date = fields.Date()
 
+    def _compute_display_name(self):
+        for account in self:
+            account.display_name = f"[{account.media_type.upper()}] {account.name}"
+
     def _fields_account_url(self):
         return []
 

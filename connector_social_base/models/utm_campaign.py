@@ -13,13 +13,17 @@ class UtmCampaign(models.Model):
     _inherit = "utm.campaign"
 
     linkedin_urn = fields.Char(string="Linkedin URN", copy=False)
-    campaign_group_id = fields.Many2one("utm.group.campaign", string="Campaign group")
-    media_id = fields.Many2one("social.network.media", string="Media")
-    account_id = fields.Many2one("social.network.account", string="Account")
-    unit_cost = fields.Float(help="Cost per post")
-    daily_budget = fields.Float(help="Maximum daily campaign spending")
+    campaign_group_id = fields.Many2one(
+        "utm.group.campaign", string="Campaign group", required=True
+    )
+    media_id = fields.Many2one("social.network.media", string="Media", required=True)
+    account_id = fields.Many2one(
+        "social.network.account", string="Account", required=True
+    )
+    unit_cost = fields.Float(help="Cost per post", required=True)
+    daily_budget = fields.Float(help="Maximum daily campaign spending", required=True)
     currency_id = fields.Many2one(
-        "res.currency", related="campaign_group_id.currency_id"
+        "res.currency", related="campaign_group_id.currency_id", required=True
     )
 
     @api.constrains("daily_budget")

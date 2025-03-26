@@ -74,7 +74,7 @@ class SocialNetworkPostAccount(models.Model):
     def filter_by_media_types(self, media_types):
         return self.env["social.network.post.account"].search(
             [
-                ("account_id.media_type", "in", media_types),
+                ("media_type", "in", media_types),
                 ("state", "in", ("ready", "failed")),
             ]
         )
