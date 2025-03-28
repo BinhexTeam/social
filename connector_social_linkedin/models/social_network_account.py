@@ -3,23 +3,28 @@
 
 import base64
 import itertools
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 
 import requests
+from dateutil.relativedelta import relativedelta
 from linkedin_api.clients.restli.client import RestliClient
-from werkzeug.urls import url_encode, url_join
+from werkzeug.urls import url_join, url_quote
 
 from odoo import api, fields, models
 from odoo.exceptions import ValidationError
 from odoo.tools import float_round
 
 from odoo.addons.connector_social_base.social_utils import (
+    _generate_timestamps,
     convert_to_date,
     social_url_encode,
 )
 
 from ..social_linkedin_utils import (
+    _FIELDS_CAMPAIGN_LINKEDIN,
+    _FIELDS_STATISTIC_LINKEDIN,
     _URL_AUTH_V2_LINKEDIN,
+    _URL_LINKEDIN,
     _URL_REST_LINKEDIN,
     _URL_V2_LINKEDIN,
     _VERSION_STRING,
@@ -69,6 +74,7 @@ class SocialNetworkAccount(models.Model):
         json_data=None,
         params_fields=None,
         params_values=None,
+        params_values_char_ignore=None,
         complete_url=False,
     ):
         base_url_linkedin = _URL_REST_LINKEDIN
@@ -81,14 +87,11 @@ class SocialNetworkAccount(models.Model):
             url += "?"
             url_params = []
             for param_field in params_fields:
-                if isinstance(params_values[param_field], list):
-                    url_params.append(
-                        social_url_encode(param_field, params_values[param_field])
+                url_params.append(
+                    social_url_encode(
+                        param_field, params_values, params_values_char_ignore
                     )
-                else:
-                    url_params.append(
-                        url_encode({param_field: params_values[param_field]})
-                    )
+                )
             url += "&".join(url_params)
         response = requests.request(
             method=method,
@@ -527,3 +530,207 @@ class SocialNetworkAccount(models.Model):
                 ),
             )
         )
+
+    def get_ads_filter_date(self, start_date, end_date):
+        start = start_date or (datetime.now() - relativedelta(months=1))
+        end = end_date or (datetime.now())
+        return start, end
+
+    def _get_campaigns(self, start_date, end_date):
+        start_time, end_time = _generate_timestamps(start_date, end_date)
+        response = self._request_linkedin(
+            endpoint="/adCampaignsV2",
+            headers=self.media_id._get_linkedin_headers(self.access_token),
+            params_fields=["q", "search", "fields", "count"],
+            params_values={
+                "q": "search",
+                "search": f"(startDate:(values:{start_time}),endDate:(values:{end_time}),test:true)",
+                "fields": _FIELDS_CAMPAIGN_LINKEDIN,
+                "count": 100,
+            },
+            params_values_char_ignore={"search": [{"all": ":"}]},
+            return_json=False,
+            linkedin_v2=True,
+        )
+
+        if response.status_code == 200:
+            campaigns = response.json().get("elements", [])
+        else:
+            raise ValidationError(f"Error in get campaigns: {response.json()}")
+        return campaigns
+
+    def _get_statistics(
+        self, campaign_ids=None, ads_ids=None, start_date=None, end_date=None
+    ):
+        start_date, end_date = self.get_ads_filter_date(start_date, end_date)
+        start_date = start_date.strftime("%Y-%m-%d").split("-")
+        parse_start_date = "(year:{},month:{},day:{})".format(
+            start_date[0],
+            start_date[1],
+            start_date[2],
+        )
+        end_date = end_date.strftime("%Y-%m-%d").split("-")
+        parse_end_date = f"(year:{end_date[0]},month:{end_date[1]},day:{end_date[2]})"
+        dateStatisticsRange = f"(start:{parse_start_date},end:{parse_end_date})"
+
+        params_fields = [
+            "q",
+            "pivots",
+            "timeGranularity",
+            "dateRange",
+            "fields",
+            "count",
+        ]
+        params_values = {
+            "q": "statistics",
+            "pivots": ["CAMPAIGN"],
+            "timeGranularity": "ALL",
+            "dateRange": dateStatisticsRange,
+            "fields": _FIELDS_STATISTIC_LINKEDIN,
+            "count": 100,
+        }
+        if campaign_ids:
+            params_fields.append("campaigns")
+            params_values.update(
+                {
+                    "campaigns": list(
+                        map(lambda x: f"urn:li:sponsoredCampaign:{x}", campaign_ids)
+                    ),
+                }
+            )
+        elif ads_ids:
+            params_fields.append("accounts")
+            params_values.update(
+                {
+                    "pivots": ["CREATIVE"],
+                    "accounts": list(
+                        map(lambda x: f"urn:li:sponsoredAccount:{x}", ads_ids)
+                    ),
+                }
+            )
+        response = self._request_linkedin(
+            endpoint="/adAnalyticsV2",
+            headers=self.media_id._get_linkedin_headers(self.access_token),
+            params_fields=params_fields,
+            params_values=params_values,
+            params_values_char_ignore={"dateRange": [{"all": ":"}]},
+            return_json=False,
+            linkedin_v2=True,
+        )
+
+        if response.status_code == 200:
+            statistics = response.json().get("elements", [])
+        else:
+            raise ValidationError(
+                f"Error in get campaigns statistics: {response.json()}"
+            )
+        return statistics
+
+    def _get_statistics_campaign(self, campaign_ids, start_date, end_date):
+        return self._get_statistics(
+            campaign_ids=campaign_ids, start_date=start_date, end_date=end_date
+        )
+
+    def _load_campaigns(self, start_date=None, end_date=None):
+        campaigns_parse = []
+        start_date, end_date = self.get_ads_filter_date(start_date, end_date)
+        campaigns = self._get_campaigns(start_date, end_date)
+        campaign_ids = list(map(lambda x: x["id"], campaigns))
+        campaigns_statistics = self._get_statistics_campaign(
+            campaign_ids, start_date, end_date
+        )
+        for campaign in campaigns:
+            statistic = list(
+                filter(
+                    lambda x: f"urn:li:sponsoredCampaign:{campaign['id']}"
+                    in x["pivotValues"],
+                    campaigns_statistics,
+                )
+            )
+            campaign.update(
+                {
+                    "advertising_account_url": (
+                        f"{_URL_LINKEDIN}/campaignmanager/accounts/{campaign['account'].split(':')[-1]}"
+                    ),
+                    "campaign_group_url": (
+                        f"{_URL_LINKEDIN}/campaignmanager/accounts/{campaign['account'].split(':')[-1]}"
+                        f"/campaign-groups?campaignGroupIds={url_quote([739284574])}"
+                    ),
+                    "organization_url": self.account_url,
+                    "media_type": self.media_type,
+                    "start_campaign": convert_to_date(
+                        miliseconds=campaign["runSchedule"]["start"],
+                        expire_date=False,
+                        format_date="%Y-%m-%d",
+                    ),
+                    "end_campaign": convert_to_date(
+                        miliseconds=campaign["runSchedule"]["end"],
+                        expire_date=False,
+                        format_date="%Y-%m-%d",
+                    ),
+                    "statistic": statistic[0] if len(statistic) > 0 else {},
+                }
+            )
+            campaigns_parse.append(campaign)
+        return campaigns_parse
+
+    def _load_campaigns_accounts(self):
+        campaigns = super()._load_campaigns_accounts()
+        account_ids = self.search([("media_type", "=", "linkedin")])
+        for account in account_ids:
+            campaigns = list(itertools.chain(campaigns, account._load_campaigns()))
+        return campaigns
+
+    def _get_statistics_ads(self, ads_ids, start_date, end_date):
+        return self._get_statistics(
+            ads_ids=ads_ids, start_date=start_date, end_date=end_date
+        )
+
+    def _load_ads(self):
+        response = self._request_linkedin(
+            endpoint="/adCreativesV2",
+            headers=self.media_id._get_linkedin_headers(self.access_token),
+            params_fields=["q", "search", "fields", "count"],
+            params_values={
+                "q": "search",
+                "search": "(test:true)",
+                "fields": "id,reference,test,campaign,status,changeAuditStamps,servingStatuses",
+                "count": 100,
+            },
+            params_values_char_ignore={"search": [{"1,2,6": ":"}]},
+            return_json=False,
+            linkedin_v2=True,
+        )
+        if response.status_code == 200:
+            ads = response.json().get("elements", [])
+        else:
+            raise ValidationError(f"Error in get ads: {response.json()}")
+
+        ads_ids = list(map(lambda x: x["id"], ads))
+        ads_statistics = self._get_statistics_ads(
+            ads_ids, start_date=None, end_date=None
+        )
+        ads_parse = []
+        for ad in ads:
+            statistic = list(
+                filter(
+                    lambda x: f"urn:li:sponsoredAccount:{ad['id']}" in x["pivotValues"],
+                    ads_statistics,
+                )
+            )
+            ad.update(
+                {
+                    "media_type": self.media_type,
+                    "statistic": statistic[0] if len(statistic) > 0 else {},
+                }
+            )
+            ads_parse.append(ad)
+
+        return ads_parse
+
+    def _load_ads_accounts(self):
+        ads = super()._load_ads_accounts()
+        account_ids = self.search([("media_type", "=", "linkedin")])
+        for account in account_ids:
+            ads = list(itertools.chain(ads, account._load_ads()))
+        return ads

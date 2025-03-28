@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<templates xml:space="preserve">
+    <t t-name="connector_social_base.SocialNetworkCampaign">
+        <div class="social-network-campaign shadow p-2">
+            <div class="d-flex justify-content-between">
+                <img
+                    t-if="campaign.media_type"
+                    t-attf-src="/connector_social_#{campaign.media_type}/static/img/#{campaign.media_type}.png"
+                    t-att-alt="campaign.media_type"
+                    class="o_object_fit_cover rounded"
+                    width="40"
+                    height="40"
+                />
+                <span t-esc="campaign.name" />
+                <span class="color-white rounded h-25" t-esc="campaign.status" />
+            </div>
+            <div class="d-flex justify-content-between pt-2">
+                <span>
+                    Run schedule
+                </span>
+                <span t-esc="campaign.start_campaign" />
+                <span t-esc="campaign.end_campaign" />
+            </div>
+            <div class="d-flex justify-content-between pt-2">
+                <a t-att-href="campaign.organization_url" target="_blank">
+                    Organization
+                </a>
+                <a t-att-href="campaign.advertising_account_url" target="_blank">
+                    Advertising account
+                </a>
+                <a t-att-href="campaign.campaign_group_url" target="_blank">
+                    Campaign group
+                </a>
+            </div>
+            <div class="d-flex justify-content-between pt-2">
+                <span>Impressions: <t t-esc="statistic.impressions" /></span>
+                <span>Clicks: <t t-esc="statistic.clicks" /></span>
+                <span>Conversions: <t t-esc="statistic.conversions" /></span>
+            </div>
+        </div>
+    </t>
+</templates>

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<templates xml:space="preserve">
+    <t t-name="connector_social_base.SocialNetworkAdsAccount">
+        <div class="social-network-ads-account">
+            <div class="row">
+                <div class="col-12 text-center">
+                    <h3>Campaigns</h3>
+                </div>
+            </div>
+            <div class="row p-lg-4 p-1">
+                <div
+                    class="col-12 col-lg-4 mb-2"
+                    t-foreach="campaigns"
+                    t-as="campaign"
+                    t-key="campaign.id"
+                >
+                    <SocialNetworkCampaign socialCampaign="campaign" />
+                </div>
+            </div>
+            <hr />
+            <div class="row">
+                <div class="col-12 text-center">
+                    <h3>Ads</h3>
+                </div>
+            </div>
+            <div class="row p-lg-3 p-1">
+                <div
+                    class="col-12 col-lg-4 mb-2"
+                    t-foreach="ads_account"
+                    t-as="ad_account"
+                    t-key="ad_account.id"
+                >
+                    <SocialNetworkAds socialAds="ad_account" />
+                </div>
+            </div>
+        </div>
+    </t>
+</templates>
