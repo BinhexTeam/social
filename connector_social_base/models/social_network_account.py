@@ -54,7 +54,11 @@ class SocialNetworkAccount(models.Model):
 
     def _compute_display_name(self):
         for account in self:
-            account.display_name = f"[{account.media_type.upper()}] {account.name}"
+            account.display_name = (
+                f"[{account.media_type.upper()}] {account.name}"
+                if account.media_type
+                else account.name
+            )
 
     def _fields_account_url(self):
         return []
@@ -88,3 +92,15 @@ class SocialNetworkAccount(models.Model):
 
     def validate_active_access_token(self):
         pass
+
+    def _load_ads_accounts(self):
+        return []
+
+    def load_ads_accounts(self):
+        return self._load_ads_accounts()
+
+    def _load_campaigns_accounts(self):
+        return []
+
+    def load_campaigns_accounts(self):
+        return self._load_campaigns_accounts()

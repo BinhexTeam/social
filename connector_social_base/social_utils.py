@@ -1,6 +1,8 @@
 # Copyright 2025 Binhex <https://www.binhex.cloud>
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
+import re
 from datetime import date, datetime, timedelta
+from urllib.parse import quote
 
 import pytz
 from werkzeug.urls import url_encode, url_quote
@@ -32,6 +34,10 @@ def convert_to_date(
     time_zone=None,
     format_date=None,
 ):
+    if time_zone or isinstance(time_zone, str):
+        time_zone = pytz.timezone(time_zone)
+    else:
+        time_zone = pytz.utc
     if expire_date:
         if not date_add:
             date_add = date.today()
@@ -39,9 +45,7 @@ def convert_to_date(
             date_add + timedelta(days=convert_to_days(seconds, miliseconds))
         )
     else:
-        return_date = datetime.fromtimestamp(miliseconds / 1000)
-    if time_zone:
-        return_date = return_date.astimezone(time_zone)
+        return_date = datetime.fromtimestamp(miliseconds / 1000, tz=time_zone)
     if format_date:
         return_date = return_date.strftime(format_date)
     return return_date
@@ -80,29 +84,48 @@ def convert_date_in_time(miliseconds, timezone=None):
     return date_in_time
 
 
-def social_url_encode(field, values):
-    """
-    Encodes a list of values into a URL-encoded string.
+def replace_repetitions(text, character_replace, character_new, repetitions):
+    positions = [m.start() for m in re.finditer(re.escape(character_replace), text)]
+    # Convert string to list to modify it
+    text_result = list(text)
+    # Replace only the indicated repetitions
+    count = 0
+    for repetition in repetitions:
+        if int(repetition) - 1 < len(positions):  # Check if the occurrence exists
+            if count == 0:
+                start = positions[int(repetition) - 1]
+                count += 1
+            else:
+                start = positions[int(repetition) - 1] - (
+                    (len(character_replace) - 1) * count
+                )
+                count += 1
+            fin = start + len(character_replace)
+            text_result[start:fin] = character_new
+    return "".join(text_result)  # We convert the list back to string
 
-    This function takes a field and a list of values, then constructs
-    a URL-encoded string representation of the list in the format:
-    'List(value1,value2,...)'. The encoded string is quoted safely
-    for inclusion in URLs, allowing specific characters to remain
-    unescaped.
 
-    Args:
-        field (str): The name of the field to be encoded.
-        values (list): A list of string values to be encoded.
+def social_url_encode(param_field, params_values, params_values_char_ignore):
+    values = {param_field: params_values[param_field]}
+    if isinstance(params_values[param_field], list):
+        values = f"List({','.join(params_values[param_field])})"
+        url_format = url_quote(
+            url_encode({param_field: values.replace("'", "")}).replace("+", ""),
+            safe="()%=[]",
+        )
+    else:
+        url_format = url_encode(values)
 
-    Returns:
-        str: A URL-encoded string representation of the field and list.
-    """
-    return url_quote(
-        url_encode({field: f"List({','.join(values)})".replace("'", "")}).replace(
-            "+", ""
-        ),
-        safe="()%=[]",
-    )
+    if params_values_char_ignore and params_values_char_ignore.get(param_field, False):
+        for params_values_char in params_values_char_ignore[param_field]:
+            for key, character in params_values_char.items():
+                if quote(character) in url_format and key == "all":
+                    url_format = url_format.replace(quote(character), character)
+                else:
+                    url_format = replace_repetitions(
+                        url_format, quote(character), character, key.split(",")
+                    )
+    return url_format
 
 
 def _generate_timestamps(date_start=None, date_end=None):
@@ -114,4 +137,4 @@ def _generate_timestamps(date_start=None, date_end=None):
         date_end_time = date_start_time + date_end.timestamp()
     else:
         date_end_time = date_start_time + (30 * 86400000)
-    return date_start_time, date_end_time
+    return int(date_start_time), int(date_end_time)
