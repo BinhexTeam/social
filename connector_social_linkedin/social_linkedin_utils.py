@@ -1,13 +1,16 @@
 # Copyright 2025 Binhex <https://www.binhex.cloud>
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
 
+_URL_LINKEDIN = "https://www.linkedin.com"
 _URL_REST_LINKEDIN = "https://api.linkedin.com/rest"
 _URL_V2_LINKEDIN = "https://api.linkedin.com/v2"
 _URL_AUTH_V2_LINKEDIN = "https://www.linkedin.com/oauth/v2"
 
+_VERSION_STRING = "202411"
+
 _HEADERS_LINKEDIN = {
     "X-Restli-Protocol-Version": "2.0.0",
-    "LinkedIn-Version": "202411",
+    "LinkedIn-Version": _VERSION_STRING,
 }
 
 _SCOPE_LINKEDIN = [
@@ -25,4 +28,9 @@ _SCOPE_LINKEDIN = [
     "r_1st_connections_size",
 ]
 
-_VERSION_STRING = "202411"
+_FIELDS_CAMPAIGN_LINKEDIN = (
+    "id,name,test,locale,runSchedule,associatedEntity,campaignGroup,account,status"
+)
+_FIELDS_STATISTIC_LINKEDIN = (
+    "actionClicks,adUnitClicks,clicks,costInUsd,externalWebsiteConversions,impressions,pivotValues"
+)

@@ -56,11 +56,16 @@
                 action="utm.utm_campaign_action"
                 sequence="4"
             />
+            <menuitem
+                id="social_network_ads_account_action_client_menu"
+                action="social_network_ads_account_action_client"
+                sequence="5"
+            />
 
             <menuitem
                 name="Social networks"
                 id="social_media_menu"
-                sequence="5"
+                sequence="6"
                 action="social_media_act_window_kanban"
                 groups="base.group_user"
             />
