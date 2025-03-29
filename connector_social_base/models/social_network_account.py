@@ -94,13 +94,7 @@ class SocialNetworkAccount(models.Model):
         pass
 
     def _load_ads_accounts(self):
-        return []
+        return {}
 
     def load_ads_accounts(self):
         return self._load_ads_accounts()
-
-    def _load_campaigns_accounts(self):
-        return []
-
-    def load_campaigns_accounts(self):
-        return self._load_campaigns_accounts()

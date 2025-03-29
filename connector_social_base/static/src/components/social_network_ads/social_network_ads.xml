@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <templates xml:space="preserve">
     <t t-name="connector_social_base.SocialNetworkAds">
-        <div class="social-network-ads shadow rounded p-2">
+        <div class="social-network-ads shadow p-2 cursor-pointer" t-on-click="onAdsClick">
             <div class="d-flex justify-content-between">
                 <img
                     t-if="ads.media_type"
@@ -11,12 +11,16 @@
                     width="40"
                     height="40"
                 />
-                <span t-esc="ads.name" />
-                <span class="color-white rounded h-25" t-esc="ads.status" />
+                <span t-esc="post.name"/>
+                <span class="color-white rounded h-25" t-esc="ads.created"/>
             </div>
             <div class="d-flex justify-content-between pt-2">
-                <span>Impressions: <t t-esc="statistic.impressions" /></span>
-                <span>Clicks: <t t-esc="statistic.clicks" /></span>
+                <span>Campaign: <t t-esc="campaign.name"/></span>
+                <span>State: <t t-esc="ads.status"/></span>
+            </div>
+            <div class="d-flex justify-content-around pt-2">
+                <span>Impressions: <t t-esc="statistic.impressions"/></span>
+                <span>Clicks: <t t-esc="statistic.clicks"/></span>
             </div>
         </div>
     </t>

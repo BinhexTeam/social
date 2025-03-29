@@ -10,6 +10,7 @@ export class NetworkPostAccountKanbanController extends KanbanController {
     setup() {
         super.setup();
         this.actionService = useService("action");
+        this.model.SyncPosts = false;
         onWillStart(async () => {
             // Await this._onUpdatePostsAndStatistics();
             this.socialAccounts = await this.model._loadAccounts();
@@ -39,9 +40,11 @@ export class NetworkPostAccountKanbanController extends KanbanController {
     }
 
     async _onUpdatePostsAndStatistics() {
+        this.model.SyncPosts = true;
         const data = await this.model.onUpdatePostsAndStatistics();
         this.socialAccounts = JSON.parse(data);
         this.model.load();
+        this.model.SyncPosts = false;
     }
 }
 

@@ -36,8 +36,6 @@ def convert_to_date(
 ):
     if time_zone or isinstance(time_zone, str):
         time_zone = pytz.timezone(time_zone)
-    else:
-        time_zone = pytz.utc
     if expire_date:
         if not date_add:
             date_add = date.today()
