@@ -8,7 +8,7 @@ from datetime import date, datetime, timedelta
 import requests
 from dateutil.relativedelta import relativedelta
 from linkedin_api.clients.restli.client import RestliClient
-from werkzeug.urls import url_join, url_quote
+from werkzeug.urls import url_join, url_quote,url_encode
 
 from odoo import api, fields, models
 from odoo.exceptions import ValidationError
@@ -352,13 +352,44 @@ class SocialNetworkAccount(models.Model):
         if (
             self.media_id.id
             == self.env.ref(
-                "connector_social_linkedin.social_network_media_linkedin"
-            ).id
+            "connector_social_linkedin.social_network_media_linkedin"
+        ).id
         ):
             self.is_valid_token_access = self.validate_linkedin_access_token(
                 self.access_token
             )
         return res
+
+    def _get_posts(self, params_fields=None, params_values=None):
+        params_fields = params_fields or ["q", "authors"]
+        params_values = params_values or {
+            "q": "authors",
+            "authors": [
+                f"urn:li:organization:{self.linkedin_account_id}"
+            ],
+        }
+        response = self._request_linkedin(
+            endpoint="/ugcPosts",
+            headers=self.media_id._get_linkedin_headers(self.access_token),
+            params_fields=params_fields,
+            params_values=params_values,
+            linkedin_v2=True,
+            return_json=False,
+        )
+        if response.status_code == 200:
+            response_ugc_posts = response.json()
+            if "ids" in params_fields:
+                ugc_posts = response_ugc_posts.get("results", [])
+            else:
+                ugc_posts = [{"id": post["id"],
+                              "share_content": post.get('specificContent', {}).get('com.linkedin.ugc.ShareContent', {})}
+                             for post
+                             in response_ugc_posts.get("elements", [])]
+        else:
+            raise ValidationError(
+                f"Error in get ugc posts: {response.json()}"
+            )
+        return ugc_posts
 
     def _update_posts_statistics(self, update_all_accounts=False):
         statistics = super()._update_posts_statistics(update_all_accounts)
@@ -372,26 +403,7 @@ class SocialNetworkAccount(models.Model):
             post_accounts = []
             if account.linkedin_account_id:
                 # POSTS
-                response_ugc_posts = self._request_linkedin(
-                    endpoint="/ugcPosts",
-                    headers=self.media_id._get_linkedin_headers(account.access_token),
-                    params_fields=["q", "authors"],
-                    params_values={
-                        "q": "authors",
-                        "authors": [
-                            f"urn:li:organization:{account.linkedin_account_id}"
-                        ],
-                    },
-                    linkedin_v2=True,
-                    return_json=False,
-                )
-                if response_ugc_posts.status_code == 200:
-                    ugc_posts = response_ugc_posts.json().get("elements", [])
-                else:
-                    raise ValidationError(
-                        f"Error in get ugc posts: {response_ugc_posts.json()}"
-                    )
-
+                ugc_posts = account._get_posts()
                 # POSTS REACTIONS
                 post_reactions = self._request_linkedin(
                     endpoint="/socialActions",
@@ -421,9 +433,7 @@ class SocialNetworkAccount(models.Model):
                     post_account = PostAccount.search(
                         [("linkedin_post_account_urn", "=", ugc_post.get("id"))]
                     )
-                    share_content = ugc_post.get("specificContent", {}).get(
-                        "com.linkedin.ugc.ShareContent", {}
-                    )
+                    share_content = ugc_post.get("share_content", {})
                     data = {
                         "linkedin_post_account_urn": ugc_post.get("id"),
                         "post_account_url": "https://www.linkedin.com/feed/update/{}".format(
@@ -531,24 +541,30 @@ class SocialNetworkAccount(models.Model):
             )
         )
 
-    def get_ads_filter_date(self, start_date, end_date):
+    def _get_ads_filter_date(self, start_date, end_date):
         start = start_date or (datetime.now() - relativedelta(months=1))
         end = end_date or (datetime.now())
         return start, end
 
-    def _get_campaigns(self, start_date, end_date):
+    def _get_campaigns(self, start_date, end_date, campaign_ids=None):
         start_time, end_time = _generate_timestamps(start_date, end_date)
+        param_values = {
+            "q": "search",
+            "search": f"(startDate:(values:{start_time}),endDate:(values:{end_time}),test:true)",
+            "fields": _FIELDS_CAMPAIGN_LINKEDIN,
+            "count": 100,
+        }
+        params_values_char_ignore = {"search": [{"all": ":"}]}
+        if campaign_ids:
+            search_campaign = param_values["search"].strip("()")
+            param_values["search"] = f"({search_campaign},campaigns:(values:List({','.join(campaign_ids)})))"
+            params_values_char_ignore = {"search": [{f"1,2,3,4,5,6,7": ":"}]}
         response = self._request_linkedin(
             endpoint="/adCampaignsV2",
             headers=self.media_id._get_linkedin_headers(self.access_token),
             params_fields=["q", "search", "fields", "count"],
-            params_values={
-                "q": "search",
-                "search": f"(startDate:(values:{start_time}),endDate:(values:{end_time}),test:true)",
-                "fields": _FIELDS_CAMPAIGN_LINKEDIN,
-                "count": 100,
-            },
-            params_values_char_ignore={"search": [{"all": ":"}]},
+            params_values=param_values,
+            params_values_char_ignore=params_values_char_ignore,
             return_json=False,
             linkedin_v2=True,
         )
@@ -560,9 +576,9 @@ class SocialNetworkAccount(models.Model):
         return campaigns
 
     def _get_statistics(
-        self, campaign_ids=None, ads_ids=None, start_date=None, end_date=None
+        self, ads_ids=None, start_date=None, end_date=None
     ):
-        start_date, end_date = self.get_ads_filter_date(start_date, end_date)
+        start_date, end_date = self._get_ads_filter_date(start_date, end_date)
         start_date = start_date.strftime("%Y-%m-%d").split("-")
         parse_start_date = "(year:{},month:{},day:{})".format(
             start_date[0],
@@ -589,16 +605,7 @@ class SocialNetworkAccount(models.Model):
             "fields": _FIELDS_STATISTIC_LINKEDIN,
             "count": 100,
         }
-        if campaign_ids:
-            params_fields.append("campaigns")
-            params_values.update(
-                {
-                    "campaigns": list(
-                        map(lambda x: f"urn:li:sponsoredCampaign:{x}", campaign_ids)
-                    ),
-                }
-            )
-        elif ads_ids:
+        if ads_ids:
             params_fields.append("accounts")
             params_values.update(
                 {
@@ -626,67 +633,13 @@ class SocialNetworkAccount(models.Model):
             )
         return statistics
 
-    def _get_statistics_campaign(self, campaign_ids, start_date, end_date):
-        return self._get_statistics(
-            campaign_ids=campaign_ids, start_date=start_date, end_date=end_date
-        )
-
-    def _load_campaigns(self, start_date=None, end_date=None):
-        campaigns_parse = []
-        start_date, end_date = self.get_ads_filter_date(start_date, end_date)
-        campaigns = self._get_campaigns(start_date, end_date)
-        campaign_ids = list(map(lambda x: x["id"], campaigns))
-        campaigns_statistics = self._get_statistics_campaign(
-            campaign_ids, start_date, end_date
-        )
-        for campaign in campaigns:
-            statistic = list(
-                filter(
-                    lambda x: f"urn:li:sponsoredCampaign:{campaign['id']}"
-                    in x["pivotValues"],
-                    campaigns_statistics,
-                )
-            )
-            campaign.update(
-                {
-                    "advertising_account_url": (
-                        f"{_URL_LINKEDIN}/campaignmanager/accounts/{campaign['account'].split(':')[-1]}"
-                    ),
-                    "campaign_group_url": (
-                        f"{_URL_LINKEDIN}/campaignmanager/accounts/{campaign['account'].split(':')[-1]}"
-                        f"/campaign-groups?campaignGroupIds={url_quote([739284574])}"
-                    ),
-                    "organization_url": self.account_url,
-                    "media_type": self.media_type,
-                    "start_campaign": convert_to_date(
-                        miliseconds=campaign["runSchedule"]["start"],
-                        expire_date=False,
-                        format_date="%Y-%m-%d",
-                    ),
-                    "end_campaign": convert_to_date(
-                        miliseconds=campaign["runSchedule"]["end"],
-                        expire_date=False,
-                        format_date="%Y-%m-%d",
-                    ),
-                    "statistic": statistic[0] if len(statistic) > 0 else {},
-                }
-            )
-            campaigns_parse.append(campaign)
-        return campaigns_parse
-
-    def _load_campaigns_accounts(self):
-        campaigns = super()._load_campaigns_accounts()
-        account_ids = self.search([("media_type", "=", "linkedin")])
-        for account in account_ids:
-            campaigns = list(itertools.chain(campaigns, account._load_campaigns()))
-        return campaigns
-
     def _get_statistics_ads(self, ads_ids, start_date, end_date):
         return self._get_statistics(
             ads_ids=ads_ids, start_date=start_date, end_date=end_date
         )
 
-    def _load_ads(self):
+    def _load_ads(self, start_date=None, end_date=None):
+        start_date, end_date = self._get_ads_filter_date(start_date, end_date)
         response = self._request_linkedin(
             endpoint="/adCreativesV2",
             headers=self.media_id._get_linkedin_headers(self.access_token),
@@ -694,7 +647,7 @@ class SocialNetworkAccount(models.Model):
             params_values={
                 "q": "search",
                 "search": "(test:true)",
-                "fields": "id,reference,test,campaign,status,changeAuditStamps,servingStatuses",
+                "fields": "id,reference,test,campaign,changeAuditStamps,servingStatuses",
                 "count": 100,
             },
             params_values_char_ignore={"search": [{"1,2,6": ":"}]},
@@ -706,11 +659,22 @@ class SocialNetworkAccount(models.Model):
         else:
             raise ValidationError(f"Error in get ads: {response.json()}")
 
+        # STATISTICS
         ads_ids = list(map(lambda x: x["id"], ads))
         ads_statistics = self._get_statistics_ads(
             ads_ids, start_date=None, end_date=None
         )
+
+        # CAMPAIGNS
+        campaign_ids = list(map(lambda x: x["campaign"], ads))
+        ads_campaigns = self._get_campaigns(start_date, end_date, campaign_ids=campaign_ids)
+
+        # POSTS
+        post_ids = list(map(lambda x: x["reference"], ads))
+        ads_ugc_posts = self._get_posts(**{'params_fields': ["ids"], 'params_values': {"ids": post_ids}})
+
         ads_parse = []
+        ads_ugc_posts_parse = []
         for ad in ads:
             statistic = list(
                 filter(
@@ -718,19 +682,49 @@ class SocialNetworkAccount(models.Model):
                     ads_statistics,
                 )
             )
+            campaign = list(
+                filter(
+                    lambda x: int(ad['campaign'].split(':')[-1]) == x["id"],
+                    ads_campaigns,
+                )
+            )
+            post = {}
+            if ad.get('reference', False):
+                post = {
+                    "id": ads_ugc_posts[ad['reference']]['id'],
+                    "name": ads_ugc_posts[ad['reference']].get('specificContent', {}).get(
+                        'com.linkedin.ugc.ShareContent', {}).get("shareCommentary", {}).get("text", ""),
+                }
+            account_id = campaign[0]['account'].split(':')[-1]
             ad.update(
                 {
                     "media_type": self.media_type,
                     "statistic": statistic[0] if len(statistic) > 0 else {},
+                    "campaign": campaign[0] if len(campaign) > 0 else {},
+                    "created": convert_to_date(miliseconds=ad['changeAuditStamps']['created']['time'],
+                                               expire_date=False,
+                                               format_date="%d/%m/%Y"),
+                    "status": ', '.join(ad['servingStatuses']),
+                    "post": post,
+                    "url": f"{_URL_LINKEDIN}{account_id}/creatives?creativeIds={url_quote([ad['id']])}",
                 }
             )
             ads_parse.append(ad)
-
-        return ads_parse
+            ads_ugc_posts_parse.append(post)
+        return ads_parse, ads_campaigns, ads_ugc_posts_parse
 
     def _load_ads_accounts(self):
         ads = super()._load_ads_accounts()
         account_ids = self.search([("media_type", "=", "linkedin")])
+        campaigns = []
+        posts = []
         for account in account_ids:
-            ads = list(itertools.chain(ads, account._load_ads()))
-        return ads
+            ads_linkedin, campaigns_linkedin, ads_ugc_posts = account._load_ads()
+            ads = list(itertools.chain(ads, ads_linkedin))
+            campaigns = list(itertools.chain(campaigns, campaigns_linkedin))
+            posts = list(itertools.chain(posts, ads_ugc_posts))
+        return {
+            'ads': ads,
+            'campaigns': campaigns,
+            'posts': posts,
+        }
