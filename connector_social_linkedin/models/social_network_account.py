@@ -8,7 +8,7 @@ from datetime import date, datetime, timedelta
 import requests
 from dateutil.relativedelta import relativedelta
 from linkedin_api.clients.restli.client import RestliClient
-from werkzeug.urls import url_join, url_quote,url_encode
+from werkzeug.urls import url_join, url_quote, url_encode
 
 from odoo import api, fields, models
 from odoo.exceptions import ValidationError
@@ -391,6 +391,39 @@ class SocialNetworkAccount(models.Model):
             )
         return ugc_posts
 
+    def _get_entity_share_statistics(self, posts=None):
+        params_fields = ["q", "organizationalEntity"]
+        params_values = {
+            "q": "organizationalEntity",
+            "organizationalEntity": f"urn:li:organization:{self.linkedin_account_id}",
+        }
+        if posts:
+            params_fields.append("shares")
+            params_values.update({
+                "shares": [
+                    "{}".format(
+                        ",".join(
+                            list(map(lambda val: val.get("id"), posts))
+                        )
+                    )
+                ]
+            })
+        response = self._request_linkedin(
+            endpoint="/organizationalEntityShareStatistics",
+            headers=self.media_id._get_linkedin_headers(self.access_token),
+            params_fields=params_fields,
+            params_values=params_values,
+            linkedin_v2=True,
+            return_json=False
+        )
+        if response.status_code == 200:
+            data = response.json().get("elements", [])
+        else:
+            raise ValidationError(
+                f"Error in get ugc posts: {response.json()}"
+            )
+        return data
+
     def _update_posts_statistics(self, update_all_accounts=False):
         statistics = super()._update_posts_statistics(update_all_accounts)
         PostAccount = self.env["social.network.post.account"]
@@ -405,28 +438,18 @@ class SocialNetworkAccount(models.Model):
                 # POSTS
                 ugc_posts = account._get_posts()
                 # POSTS REACTIONS
-                post_reactions = self._request_linkedin(
-                    endpoint="/socialActions",
-                    headers=self.media_id._get_linkedin_headers(account.access_token),
-                    params_fields=["ids"],
-                    params_values={
-                        "ids": [
-                            "{}".format(
-                                ",".join(
-                                    list(map(lambda val: val.get("id"), ugc_posts))
-                                )
-                            )
-                        ]
-                    },
-                    linkedin_v2=True,
-                )
+                post_reactions = account._get_entity_share_statistics(posts=ugc_posts)
 
                 post_data_reactions = {
-                    post_id: (
-                        post_data["likesSummary"]["totalLikes"],
-                        post_data["commentsSummary"]["aggregatedTotalComments"],
+                    post_reaction['share']: (
+                        post_reaction.get('totalShareStatistics', {}).get('clickCount', 0),
+                        post_reaction.get('totalShareStatistics', {}).get('likeCount', 0),
+                        post_reaction.get('totalShareStatistics', {}).get('commentCount', 0),
+                        post_reaction.get('totalShareStatistics', {}).get('shareCount', 0),
+                        post_reaction.get('totalShareStatistics', {}).get('engagement', 0),
+                        post_reaction.get('totalShareStatistics', {}).get('impressionCount', 0),
                     )
-                    for post_id, post_data in post_reactions.get("results", []).items()
+                    for post_reaction in post_reactions
                 }
 
                 for ugc_post in ugc_posts:
@@ -434,21 +457,23 @@ class SocialNetworkAccount(models.Model):
                         [("linkedin_post_account_urn", "=", ugc_post.get("id"))]
                     )
                     share_content = ugc_post.get("share_content", {})
+                    post_id = ugc_post.get("id")
+                    post_data_reaction = post_data_reactions.get(post_id, {})
                     data = {
-                        "linkedin_post_account_urn": ugc_post.get("id"),
+                        "linkedin_post_account_urn": post_id,
                         "post_account_url": "https://www.linkedin.com/feed/update/{}".format(
-                            ugc_post.get("id")
+                            post_id
                         ),
                         "message": share_content.get("shareCommentary", {}).get(
                             "text", ""
                         ),
                         "account_id": account.id,
-                        "likes_count": post_data_reactions.get(
-                            ugc_post.get("id"), (0, 0)
-                        )[0],
-                        "comments_count": post_data_reactions.get(
-                            ugc_post.get("id"), (0, 0)
-                        )[1],
+                        "clicks_count": post_data_reaction[0] if post_data_reaction else 0,
+                        "likes_count": post_data_reaction[1] if post_data_reaction else 0,
+                        "comments_count": post_data_reaction[2] if post_data_reaction else 0,
+                        "shares_count": post_data_reaction[3] if post_data_reaction else 0,
+                        "engagement": post_data_reaction[4] if post_data_reaction else 0,
+                        "impression_count": post_data_reaction[5] if post_data_reaction else 0,
                         "published_date": convert_to_date(
                             miliseconds=ugc_post.get("firstPublishedAt", 0),
                             expire_date=False,
@@ -464,20 +489,10 @@ class SocialNetworkAccount(models.Model):
                     else:
                         post_accounts.append((1, post_account.id, data))
 
-                response_organization_statistics = self._request_linkedin(
-                    endpoint="/organizationalEntityShareStatistics",
-                    headers=self.media_id._get_linkedin_headers(account.access_token),
-                    params={
-                        "q": "organizationalEntity",
-                        "organizationalEntity": account.linkedin_account_urn,
-                    },
-                )
-                organization_statistics = response_organization_statistics.get(
-                    "elements", []
-                )
+                entity_statistics = account._get_entity_share_statistics()
 
                 def map_statistics(x, interaction=False, engagement=False):
-                    share_statistics = x.get("totalShareStatistics", 0)
+                    share_statistics = x.get("totalShareStatistics", {})
                     total_views = share_statistics.get("impressionCount", 0)
                     if interaction:
                         return (
@@ -487,13 +502,7 @@ class SocialNetworkAccount(models.Model):
                             + share_statistics.get("commentCount", 0)
                         )
                     elif engagement:
-                        return (
-                            float_round(
-                                share_statistics.get("engagement", 0) / total_views, 2
-                            )
-                            if total_views > 0
-                            else 0
-                        )
+                        return share_statistics.get("engagement", 0)
                     return total_views
 
                 account.write(
@@ -501,7 +510,7 @@ class SocialNetworkAccount(models.Model):
                         "total_views": sum(
                             list(
                                 map(
-                                    lambda x: map_statistics(x), organization_statistics
+                                    lambda x: map_statistics(x), entity_statistics
                                 )
                             )
                         ),
@@ -509,7 +518,7 @@ class SocialNetworkAccount(models.Model):
                             list(
                                 map(
                                     lambda x: map_statistics(x, interaction=True),
-                                    organization_statistics,
+                                    entity_statistics,
                                 )
                             )
                         ),
@@ -517,7 +526,7 @@ class SocialNetworkAccount(models.Model):
                             list(
                                 map(
                                     lambda x: map_statistics(x, engagement=True),
-                                    organization_statistics,
+                                    entity_statistics,
                                 )
                             )
                         ),

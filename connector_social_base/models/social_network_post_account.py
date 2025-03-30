@@ -31,8 +31,14 @@ class SocialNetworkPostAccount(models.Model):
     published_date = fields.Datetime()
     published = fields.Boolean(default=True)
     message = fields.Text(required=True)
+
     comments_count = fields.Integer()
     likes_count = fields.Integer()
+    clicks_count = fields.Integer()
+    shares_count = fields.Integer()
+    impression_count = fields.Float()
+    engagement = fields.Float()
+
     video_ids = fields.Many2many(
         "ir.attachment",
         relation="social_network_post_account_video_rel",
