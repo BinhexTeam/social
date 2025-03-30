@@ -542,6 +542,7 @@ class SocialNetworkAccount(models.Model):
                         "name",
                         "company_id",
                         "media_id",
+                        "account_url",
                         "total_views",
                         "interactions_count",
                         "engagement_rate",

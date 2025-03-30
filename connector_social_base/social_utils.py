@@ -34,7 +34,7 @@ def convert_to_date(
     time_zone=None,
     format_date=None,
 ):
-    if time_zone or isinstance(time_zone, str):
+    if time_zone and isinstance(time_zone, str):
         time_zone = pytz.timezone(time_zone)
     if expire_date:
         if not date_add:
