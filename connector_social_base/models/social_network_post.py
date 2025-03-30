@@ -38,8 +38,14 @@ class SocialNetworkPost(models.Model):
         default="draft",
     )
     post_account_ids = fields.One2many("social.network.post.account", "post_id")
+
     count_post_likes = fields.Integer(compute="_compute_post_statistics", default=0)
     count_post_comments = fields.Integer(compute="_compute_post_statistics", default=0)
+    count_post_clicks = fields.Integer(compute="_compute_post_statistics", default=0)
+    count_post_shares = fields.Integer(compute="_compute_post_statistics", default=0)
+    count_post_impression = fields.Integer(compute="_compute_post_statistics", default=0)
+    count_post_engagement = fields.Float(compute="_compute_post_statistics", default=0)
+    count_post_interactions = fields.Float(compute="_compute_post_statistics", default=0)
 
     image_ids = fields.Many2many(
         "ir.attachment",
@@ -73,13 +79,27 @@ class SocialNetworkPost(models.Model):
                 post.send_post_date = datetime.now() + timedelta(hours=1)
                 post.state = "planned"
 
-    @api.depends("post_account_ids.likes_count", "post_account_ids.comments_count")
+    @api.depends("post_account_ids.likes_count",
+                 "post_account_ids.comments_count",
+                 "post_account_ids.clicks_count",
+                 "post_account_ids.shares_count",
+                 "post_account_ids.engagement",
+                 "post_account_ids.impression_count",
+                 )
     def _compute_post_statistics(self):
         for post in self:
+            post.count_post_clicks = sum(post.mapped("post_account_ids.clicks_count"))
+            post.count_post_shares = sum(post.mapped("post_account_ids.shares_count"))
             post.count_post_likes = sum(post.mapped("post_account_ids.likes_count"))
+            post.count_post_engagement = sum(post.mapped("post_account_ids.engagement"))
+            post.count_post_impression = sum(post.mapped("post_account_ids.engagement"))
             post.count_post_comments = sum(
                 post.mapped("post_account_ids.comments_count")
             )
+            post.count_post_interactions = (post.count_post_clicks
+                                            + post.count_post_likes
+                                            + post.count_post_comments
+                                            + post.count_post_shares)
 
     def _render_values_preview(self):
         """
