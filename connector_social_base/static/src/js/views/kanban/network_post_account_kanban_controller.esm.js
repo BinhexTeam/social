@@ -12,7 +12,7 @@ export class NetworkPostAccountKanbanController extends KanbanController {
         this.actionService = useService("action");
         this.model.SyncPosts = false;
         onWillStart(async () => {
-            // Await this._onUpdatePostsAndStatistics();
+            await this._onUpdatePostsAndStatistics();
             this.socialAccounts = await this.model._loadAccounts();
         });
         useSubEnv({

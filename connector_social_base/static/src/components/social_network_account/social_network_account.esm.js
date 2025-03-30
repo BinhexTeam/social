@@ -7,7 +7,4 @@ export class SocialNetworkAccount extends Component {
     static props = {
         socialAccounts: {type: Array},
     };
-    setup() {
-        super.setup();
-    }
 }
