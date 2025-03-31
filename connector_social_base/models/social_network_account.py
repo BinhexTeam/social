@@ -28,19 +28,25 @@ class SocialNetworkAccount(models.Model):
     post_account_ids = fields.One2many("social.network.post.account", "account_id")
 
     # STATISTICS
+    comment_count = fields.Integer()
+    like_count = fields.Integer()
+    click_count = fields.Integer()
+    share_count = fields.Integer()
     interactions_count = fields.Integer(
+        compute="_compute_interactions_count", store=True,
         help="""
             Indicates the interactions with the
             publication (clicks, likes, comments,shares).
         """
     )
-    total_views = fields.Integer(
+    impression_count = fields.Integer(
         help="""
             Total number of views, which may include
             multiple views by the same user.
         """
     )
-    engagement_rate = fields.Float(compute="_compute_engagement_rate", store=True)
+    engagement = fields.Float()
+
     account_url = fields.Char(compute="_compute_account_url", store=True)
     enviroment = fields.Selection(
         [("test", "Test"), ("production", "Production")], default="test"
@@ -71,15 +77,16 @@ class SocialNetworkAccount(models.Model):
                     val_url[1] if account.media_id.media_type in val_url[0] else ""
                 )
 
-    @api.depends("interactions_count", "total_views")
-    def _compute_engagement_rate(self):
+    @api.depends("click_count", "like_count", "share_count", "comment_count")
+    def _compute_interactions_count(self):
         for account in self:
-            account.engagement_rate = float_is_zero(
-                account.interactions_count / account.total_views
-                if account.total_views > 0
-                else 0,
-                2,
-            )
+            account.interactions_count = account.click_count + account.like_count + account.share_count + account.comment_count
+
+    def _get_chart_account_statistics(self, start_date, end_date):
+        return []
+
+    def get_chart_account_statistics(self, start_date=None, end_date=None):
+        return self._get_chart_account_statistics(start_date, end_date)
 
     def _update_posts_statistics(self, update_all_accounts):
         return []

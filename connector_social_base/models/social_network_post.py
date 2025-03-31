@@ -79,27 +79,26 @@ class SocialNetworkPost(models.Model):
                 post.send_post_date = datetime.now() + timedelta(hours=1)
                 post.state = "planned"
 
-    @api.depends("post_account_ids.likes_count",
-                 "post_account_ids.comments_count",
-                 "post_account_ids.clicks_count",
-                 "post_account_ids.shares_count",
+    @api.depends("post_account_ids.like_count",
+                 "post_account_ids.comment_count",
+                 "post_account_ids.click_count",
+                 "post_account_ids.share_count",
                  "post_account_ids.engagement",
                  "post_account_ids.impression_count",
                  )
     def _compute_post_statistics(self):
         for post in self:
-            post.count_post_clicks = sum(post.mapped("post_account_ids.clicks_count"))
-            post.count_post_shares = sum(post.mapped("post_account_ids.shares_count"))
-            post.count_post_likes = sum(post.mapped("post_account_ids.likes_count"))
+            post.count_post_clicks = sum(post.mapped("post_account_ids.click_count"))
+            post.count_post_shares = sum(post.mapped("post_account_ids.share_count"))
+            post.count_post_likes = sum(post.mapped("post_account_ids.like_count"))
             post.count_post_engagement = sum(post.mapped("post_account_ids.engagement"))
             post.count_post_impression = sum(post.mapped("post_account_ids.engagement"))
             post.count_post_comments = sum(
-                post.mapped("post_account_ids.comments_count")
+                post.mapped("post_account_ids.comment_count")
             )
             post.count_post_interactions = (post.count_post_clicks
                                             + post.count_post_likes
-                                            + post.count_post_comments
-                                            + post.count_post_shares)
+                                            + post.count_post_comments + post.count_post_shares)
 
     def _render_values_preview(self):
         """

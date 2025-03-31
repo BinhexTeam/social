@@ -61,8 +61,8 @@
                                     <field name="message"/>
                                     <field name="published_date"/>
                                     <field name="image_urls"/>
-                                    <field name="comments_count"/>
-                                    <field name="likes_count"/>
+                                    <field name="comment_count"/>
+                                    <field name="like_count"/>
                                     <field name="post_account_url"/>
                                     <field name="author"/>
                                     <field name="media_type"/>

@@ -2,22 +2,21 @@
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
 
 import base64
+import requests
 import itertools
 from datetime import date, datetime, timedelta
-
-import requests
 from dateutil.relativedelta import relativedelta
 from linkedin_api.clients.restli.client import RestliClient
 from werkzeug.urls import url_join, url_quote, url_encode
 
-from odoo import api, fields, models
+from odoo import api, fields, models, _
 from odoo.exceptions import ValidationError
-from odoo.tools import float_round
 
 from odoo.addons.connector_social_base.social_utils import (
     _generate_timestamps,
     convert_to_date,
     social_url_encode,
+    get_weeks,
 )
 
 from ..social_linkedin_utils import (
@@ -391,12 +390,15 @@ class SocialNetworkAccount(models.Model):
             )
         return ugc_posts
 
-    def _get_entity_share_statistics(self, posts=None):
-        params_fields = ["q", "organizationalEntity"]
-        params_values = {
-            "q": "organizationalEntity",
-            "organizationalEntity": f"urn:li:organization:{self.linkedin_account_id}",
-        }
+    def _get_entity_share_statistics(self, posts=None, params_fields=None, params_values=None,
+                                     params_values_char_ignore=None):
+        if not params_fields:
+            params_fields = ["q", "organizationalEntity"]
+        if not params_values:
+            params_values = {
+                "q": "organizationalEntity",
+                "organizationalEntity": f"urn:li:organization:{self.linkedin_account_id}",
+            }
         if posts:
             params_fields.append("shares")
             params_values.update({
@@ -413,6 +415,7 @@ class SocialNetworkAccount(models.Model):
             headers=self.media_id._get_linkedin_headers(self.access_token),
             params_fields=params_fields,
             params_values=params_values,
+            params_values_char_ignore=params_values_char_ignore,
             linkedin_v2=True,
             return_json=False
         )
@@ -468,10 +471,10 @@ class SocialNetworkAccount(models.Model):
                             "text", ""
                         ),
                         "account_id": account.id,
-                        "clicks_count": post_data_reaction[0] if post_data_reaction else 0,
-                        "likes_count": post_data_reaction[1] if post_data_reaction else 0,
-                        "comments_count": post_data_reaction[2] if post_data_reaction else 0,
-                        "shares_count": post_data_reaction[3] if post_data_reaction else 0,
+                        "click_count": post_data_reaction[0] if post_data_reaction else 0,
+                        "like_count": post_data_reaction[1] if post_data_reaction else 0,
+                        "comment_count": post_data_reaction[2] if post_data_reaction else 0,
+                        "share_count": post_data_reaction[3] if post_data_reaction else 0,
                         "engagement": post_data_reaction[4] if post_data_reaction else 0,
                         "impression_count": post_data_reaction[5] if post_data_reaction else 0,
                         "published_date": convert_to_date(
@@ -488,73 +491,104 @@ class SocialNetworkAccount(models.Model):
                         post_accounts.append((0, 0, data))
                     else:
                         post_accounts.append((1, post_account.id, data))
+                update_account_data = {
+                    "post_account_ids": post_accounts,
+                }
 
                 entity_statistics = account._get_entity_share_statistics()
+                if len(entity_statistics) > 0:
+                    share_statistics = entity_statistics[0].get('totalShareStatistics', {})
+                    update_account_data.update({
+                        "click_count": share_statistics.get('clickCount', 0),
+                        "like_count": share_statistics.get('likeCount', 0),
+                        "impression_count": share_statistics.get('impressionCount', 0),
+                        "comment_count": share_statistics.get('commentCount', 0),
+                        "share_count": share_statistics.get('shareCount', 0),
+                        "engagement": round(share_statistics.get('engagement', 0), 2),
+                    })
 
-                def map_statistics(x, interaction=False, engagement=False):
-                    share_statistics = x.get("totalShareStatistics", {})
-                    total_views = share_statistics.get("impressionCount", 0)
-                    if interaction:
-                        return (
-                            share_statistics.get("shareCount", 0)
-                            + share_statistics.get("clickCount", 0)
-                            + share_statistics.get("likeCount", 0)
-                            + share_statistics.get("commentCount", 0)
-                        )
-                    elif engagement:
-                        return share_statistics.get("engagement", 0)
-                    return total_views
+                account.write(update_account_data)
+        return self._get_account_statistics(statistics=statistics)
 
-                account.write(
-                    {
-                        "total_views": sum(
-                            list(
-                                map(
-                                    lambda x: map_statistics(x), entity_statistics
-                                )
-                            )
-                        ),
-                        "interactions_count": sum(
-                            list(
-                                map(
-                                    lambda x: map_statistics(x, interaction=True),
-                                    entity_statistics,
-                                )
-                            )
-                        ),
-                        "engagement_rate": sum(
-                            list(
-                                map(
-                                    lambda x: map_statistics(x, engagement=True),
-                                    entity_statistics,
-                                )
-                            )
-                        ),
-                        "post_account_ids": post_accounts,
-                    }
-                )
-        return list(
-            itertools.chain(
-                statistics,
-                self.search_read(
-                    [("media_type", "=", "linkedin")],
-                    [
-                        "name",
-                        "company_id",
-                        "media_id",
-                        "account_url",
-                        "total_views",
-                        "interactions_count",
-                        "engagement_rate",
-                    ],
-                ),
-            )
+    def _get_account_statistics(self, statistics=None):
+        data = self.search_read(
+            [("media_type", "=", "linkedin")],
+            [
+                "name",
+                "company_id",
+                "media_id",
+                "account_url",
+                "impression_count",
+                "interactions_count",
+                "engagement",
+            ],
         )
+        if statistics:
+            data = list(
+                itertools.chain(
+                    statistics,
+                    data,
+                )
+            )
+        return data
 
-    def _get_ads_filter_date(self, start_date, end_date):
+    def _get_default_filter_date(self, start_date, end_date, time_date=False):
         start = start_date or (datetime.now() - relativedelta(months=1))
         end = end_date or (datetime.now())
+        if time_date:
+            return _generate_timestamps(date_start=start, date_end=end)
         return start, end
+
+    def _get_chart_account_statistics(self, start_date=None, end_date=None,granularity="WEEK"):
+        data = super()._get_chart_account_statistics(start_date,end_date)
+        account_ids = self.search([("media_type", "=", "linkedin")])
+        data_linkedin = []
+        for account in account_ids:
+            start_date_time, end_date_time = account._get_default_filter_date(start_date, end_date, time_date=True)
+            start_date, end_date = account._get_default_filter_date(start_date, end_date)
+
+            params_fields = ["q", "organizationalEntity", "timeIntervals", "count"]
+            params_values = {
+                "q": "organizationalEntity",
+                "organizationalEntity": f"urn:li:organization:{account.linkedin_account_id}",
+                "timeIntervals": f"(timeRange:(start:{start_date_time},end:{end_date_time}),timeGranularityType:{granularity})",
+                "count": 100,
+            }
+            params_values_char_ignore = {"timeIntervals": [{"all": ":"}]}
+            account_share_statistics = account._get_entity_share_statistics(params_fields=params_fields,
+                                                                            params_values=params_values,
+                                                                            params_values_char_ignore=params_values_char_ignore)
+
+            chart_weeks = get_weeks(start_date, end_date)
+            if account_share_statistics:
+                def map_chart_data(label, key_data='clickCount'):
+                    dataset = {
+                        "pointStyle": "circle",
+                        "pointRadius": 10,
+                        "pointHoverRadius": 15,
+                        "label": _(label),
+                        "data": [
+                            share_statistic.get('totalShareStatistics', {}).get(key_data, 0)
+                            for share_statistic in account_share_statistics
+                        ],
+                    }
+                    return dataset
+
+                data_linkedin.append({
+                    "id": account.id,
+                    "name": account.name,
+                    "chartLabel": _("Statistics (Weeks)"),
+                    "labels": [week for week in chart_weeks],
+                    "datasets": [
+                        map_chart_data('Clicks', 'clickCount'),
+                        map_chart_data('Shares', 'shareCount'),
+                        map_chart_data('Likes', 'likeCount'),
+                        map_chart_data('Comments', 'commentCount'),
+                        map_chart_data('Impressions', 'impressionCount'),
+                        map_chart_data('Engagement', 'engagement'),
+                    ]
+                })
+        return list(itertools.chain(data, data_linkedin))
 
     def _get_campaigns(self, start_date, end_date, campaign_ids=None):
         start_time, end_time = _generate_timestamps(start_date, end_date)
@@ -588,7 +622,7 @@ class SocialNetworkAccount(models.Model):
     def _get_statistics(
         self, ads_ids=None, start_date=None, end_date=None
     ):
-        start_date, end_date = self._get_ads_filter_date(start_date, end_date)
+        start_date, end_date = self._get_default_filter_date(start_date, end_date)
         start_date = start_date.strftime("%Y-%m-%d").split("-")
         parse_start_date = "(year:{},month:{},day:{})".format(
             start_date[0],
@@ -649,7 +683,7 @@ class SocialNetworkAccount(models.Model):
         )
 
     def _load_ads(self, start_date=None, end_date=None):
-        start_date, end_date = self._get_ads_filter_date(start_date, end_date)
+        start_date, end_date = self._get_default_filter_date(start_date, end_date)
         response = self._request_linkedin(
             endpoint="/adCreativesV2",
             headers=self.media_id._get_linkedin_headers(self.access_token),

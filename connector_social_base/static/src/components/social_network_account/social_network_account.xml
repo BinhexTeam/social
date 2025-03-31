@@ -32,7 +32,7 @@
                 <div class="d-flex justify-content-between">
                     <div class="d-flex justify-content-center">
                         <i class="text-700 fa fa-eye px-1 pt-1" />
-                        <span class="fw-bold px-1" t-esc="social_account.total_views" />
+                        <span class="fw-bold px-1" t-esc="social_account.impression_count" />
                     </div>
                     <div class="d-flex justify-content-center px-1">
                         <i class="text-700 fa fa-hand-o-up px-1 pt-1" />
@@ -45,7 +45,7 @@
                         <i class="text-700 fa fa-star px-1 pt-1" />
                         <span
                             class="fw-bold px-1"
-                            t-esc="social_account.engagement_rate"
+                            t-esc="social_account.engagement"
                         />
                     </div>
                 </div>

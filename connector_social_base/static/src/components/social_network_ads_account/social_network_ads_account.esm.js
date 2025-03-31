@@ -34,7 +34,7 @@ export class SocialNetworkAdsAccount extends Component {
         });
     }
 
-    onValidateRangeDate(ev) {
+    onValidateRangeDate() {
         if (this.startDate.el.value && this.endDate.el.value) {
             if (this.startDate.el.value > this.endDate.el.value) {
                 this.notification.add(_t("Start date must be less than end date."), {

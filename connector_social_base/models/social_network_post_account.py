@@ -32,10 +32,10 @@ class SocialNetworkPostAccount(models.Model):
     published = fields.Boolean(default=True)
     message = fields.Text(required=True)
 
-    comments_count = fields.Integer()
-    likes_count = fields.Integer()
-    clicks_count = fields.Integer()
-    shares_count = fields.Integer()
+    comment_count = fields.Integer()
+    like_count = fields.Integer()
+    click_count = fields.Integer()
+    share_count = fields.Integer()
     impression_count = fields.Float()
     engagement = fields.Float()
 

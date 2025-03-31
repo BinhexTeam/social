@@ -17,9 +17,9 @@ export class NetworkPostAccountKanbanModel extends RelationalModel {
                 "company_id",
                 "media_id",
                 "account_url",
-                "total_views",
+                "impression_count",
                 "interactions_count",
-                "engagement_rate",
+                "engagement",
             ]
         );
     }

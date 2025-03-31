@@ -24,10 +24,15 @@
     ],
     "assets": {
         "web.assets_backend": [
+            # LIBS
+            'connector_social_base/static/src/libs/**/*.js',
             # GENERAL
             "connector_social_base/static/src/xml/**/*.xml",
             "connector_social_base/static/src/scss/**/*.scss",
-            "connector_social_base/static/src/js/**/*.js",
+            # MIXINS
+            "connector_social_base/static/src/js/app/social_network_mixin.esm.js",
+            "connector_social_base/static/src/js/app/social_post_account_mixin.esm.js",
+            "connector_social_base/static/src/js/app/connector_social_base_mixins.esm.js",
             # SERVICES
             "connector_social_base/static/src/js/services/**/*.js",
             # COMPONENTS
@@ -38,6 +43,11 @@
             "connector_social_base/static/src/js/views/**/*.xml",
             "connector_social_base/static/src/js/views/**/*.scss",
             "connector_social_base/static/src/js/views/**/*.js",
+        ],
+    },
+    "external_dependencies": {
+        "python": [
+            "pandas",
         ],
     },
 }
