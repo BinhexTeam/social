@@ -6,7 +6,6 @@ import {patch} from "@web/core/utils/patch";
 patch(NetworkPostAccountKanbanModel.prototype, {
     async onLikePost(record) {
         super.onLikePost();
-        console.warn(this);
         const post_id = record.id.value;
         const author_urn = record.linkedin_account_urn.value;
         return await this.orm.silent.call(

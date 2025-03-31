@@ -28,9 +28,9 @@ _SCOPE_LINKEDIN = [
     "r_1st_connections_size",
 ]
 
-_FIELDS_CAMPAIGN_LINKEDIN = (
-    "id,name,test,account"
-)
+_FIELDS_CAMPAIGN_LINKEDIN = "id,name,test,account"
 _FIELDS_STATISTIC_LINKEDIN = (
-    "actionClicks,adUnitClicks,clicks,costInUsd,externalWebsiteConversions,impressions,pivotValues"
+    "actionClicks,adUnitClicks,clicks,costInUsd,"
+    "externalWebsiteConversions,impressions,pivotValues"
 )
+_URN_ORGANIZATION_LINKEDIN = "urn:li:organization:"

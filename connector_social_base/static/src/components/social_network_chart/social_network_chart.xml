@@ -19,11 +19,11 @@
         <!--        </div>-->
         <div class="social-chart row mt-2">
                     <SocialNetworkChartAccount
-                        t-foreach="socialAccountStatistics"
-                        t-as="chartAccount"
-                        t-key="chartAccount.id"
-                        socialChartAccount="chartAccount"
-                    />
+                t-foreach="socialAccountStatistics"
+                t-as="chartAccount"
+                t-key="chartAccount.id"
+                socialChartAccount="chartAccount"
+            />
         </div>
     </t>
 </templates>

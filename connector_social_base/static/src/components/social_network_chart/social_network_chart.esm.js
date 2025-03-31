@@ -1,10 +1,8 @@
 /** @odoo-module **/
-
-import {Component, onWillStart, useState} from "@odoo/owl";
-import {_t} from "@web/core/l10n/translation";
+import {Component, onWillStart} from "@odoo/owl";
+import {SocialNetworkChartAccount} from "@connector_social_base/components/components.esm";
 import {registry} from "@web/core/registry";
 import {useService} from "@web/core/utils/hooks";
-import {SocialNetworkChartAccount} from "../social_network_chart_account/social_network_chart_account.esm";
 
 export class SocialNetworkChart extends Component {
     static template = "connector_social_base.SocialNetworkChart";
@@ -26,10 +24,9 @@ export class SocialNetworkChart extends Component {
         this.socialAccountStatistics = await this.ormService.call(
             "social.network.account",
             "get_chart_account_statistics",
-            [[]],
+            [[]]
         );
     }
 }
 
 registry.category("actions").add("social_network_chart", SocialNetworkChart);
-
