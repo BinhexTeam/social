@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates xml:space="preserve">
+
+    <t t-name="connector_social_base.SocialNetworkChartAccount">
+          <div class="shadow p-2 bg-light">
+             <div class="bg-secondary p-2">
+                 <span class="fs-4" t-esc="chartAccount.name"/>
+             </div>
+              <div class="mt-2 px-2">
+                  <canvas t-ref="chartAccount"/>
+              </div>
+            </div>
+    </t>
+
+</templates>

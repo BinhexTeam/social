@@ -1,12 +1,11 @@
 # Copyright 2025 Binhex <https://www.binhex.cloud>
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
 import re
+import pandas as pd
+import pytz
 from datetime import date, datetime, timedelta
 from urllib.parse import quote
-
-import pytz
 from werkzeug.urls import url_encode, url_quote
-
 from odoo.tools.date_utils import add
 
 
@@ -136,3 +135,11 @@ def _generate_timestamps(date_start=None, date_end=None):
     else:
         date_end_time = date_start_time + (30 * 86400000)
     return int(date_start_time), int(date_end_time)
+
+
+def get_weeks(start_date, end_date,freq="W-MON"):
+    start_date = pd.to_datetime(start_date) if isinstance(start_date, str) else start_date
+    end_date = pd.to_datetime(end_date) if isinstance(end_date, str) else end_date
+    weeks = pd.date_range(start=start_date, end=end_date, freq=freq)
+    weeks = [(week.strftime('%W/%Y')) for week in weeks]
+    return weeks

@@ -5,3 +5,5 @@ export {SocialNetworkComment} from "./social_network_comment/social_network_comm
 export {SocialNetworkCommentDialog} from "./social_network_comment_dialog/social_network_comment_dialog.esm";
 export {SocialNetworkAds} from "./social_network_ads/social_network_ads.esm";
 export {SocialNetworkAdsAccount} from "./social_network_ads_account/social_network_ads_account.esm";
+export {SocialNetworkChartAccount} from "./social_network_chart_account/social_network_chart_account.esm";
+export {SocialNetworkChart} from "./social_network_chart/social_network_chart.esm";
