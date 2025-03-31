@@ -30,15 +30,15 @@
                                 widget="many2many_tags"
                                 options="{'no_quick_create': True, 'no_create_edit': True, 'no_create': True, 'no_open': True}"
                             />
-                            <field name="message"/>
+                            <field name="message" />
                             <field
                                 name="image_ids"
                                 widget="many2many_binary"
                                 options="{'accepted_file_extensions': 'image/jpeg, image/png, image/jpg'}"
                             />
-                            <field name="video_ids" widget="many2many_binary"/>
-                            <field name="campaign_id"/>
-                            <field name="send_post"/>
+                            <field name="video_ids" widget="many2many_binary" />
+                            <field name="campaign_id" />
+                            <field name="send_post" />
                             <field
                                 name="send_post_date"
                                 invisible="send_post == 'now'"
@@ -47,25 +47,25 @@
                         </group>
                         <group>
                             <div class="post-preview">
-                                <field name="post_preview" nolabel="1"/>
+                                <field name="post_preview" nolabel="1" />
                             </div>
                         </group>
                     </group>
                     <div invisible="state in ('draft','planned')">
-                        <field name="message" readonly="1"/>
+                        <field name="message" readonly="1" />
                     </div>
                     <notebook invisible="state in ('draft','planned')">
                         <page name="post_account_ids" string="Posts">
                             <field name="post_account_ids" nolabel="1" readonly="1">
                                 <kanban js_class="social_network_kanban">
-                                    <field name="message"/>
-                                    <field name="published_date"/>
-                                    <field name="image_urls"/>
-                                    <field name="comment_count"/>
-                                    <field name="like_count"/>
-                                    <field name="post_account_url"/>
-                                    <field name="author"/>
-                                    <field name="media_type"/>
+                                    <field name="message" />
+                                    <field name="published_date" />
+                                    <field name="image_urls" />
+                                    <field name="comment_count" />
+                                    <field name="like_count" />
+                                    <field name="post_account_url" />
+                                    <field name="author" />
+                                    <field name="media_type" />
                                     <templates>
                                         <t t-name="kanban-box">
                                             <div
@@ -94,9 +94,9 @@
                     </notebook>
                 </sheet>
                 <div class="oe_chatter">
-                    <field name="message_follower_ids" groups="base.group_user"/>
-                    <field name="activity_ids"/>
-                    <field name="message_ids"/>
+                    <field name="message_follower_ids" groups="base.group_user" />
+                    <field name="activity_ids" />
+                    <field name="message_ids" />
                 </div>
             </form>
         </field>
@@ -107,7 +107,7 @@
         <field name="model">social.network.post</field>
         <field name="arch" type="xml">
             <tree>
-                <field name="message"/>
+                <field name="message" />
             </tree>
         </field>
     </record>
@@ -117,16 +117,17 @@
         <field name="model">social.network.post</field>
         <field name="arch" type="xml">
             <kanban js_class="social_network_kanban">
-                <field name="id"/>
-                <field name="account_ids"/>
-                <field name="message"/>
-                <field name="published_date"/>
-                <field name="image_urls"/>
-                <field name="count_post_likes"/>
-                <field name="count_post_comments"/>
-                <field name="count_post_clicks"/>
-                <field name="count_post_impression"/>
-                <field name="count_post_engagement"/>
+                <field name="id" />
+                <field name="account_ids" />
+                <field name="message" />
+                <field name="published_date" />
+                <field name="image_urls" />
+                <field name="count_post_likes" />
+                <field name="count_post_comments" />
+                <field name="count_post_clicks" />
+                <field name="count_post_impression" />
+                <field name="count_post_interactions" />
+                <field name="count_post_engagement" />
                 <templates>
                     <t t-name="kanban-box">
                         <div class="oe_kanban_global_click rounded">
@@ -134,7 +135,7 @@
                                 <div
                                     class="d-flex justify-content-between align-items-center"
                                 >
-                                    <field name="account_ids" widget="many2many_tags"/>
+                                    <field name="account_ids" widget="many2many_tags" />
                                     <field
                                         name="state"
                                         widget="badge"
@@ -144,7 +145,7 @@
                                         decoration-danger="state == 'cancelled'"
                                     />
                                 </div>
-                                <hr/>
+                                <hr />
                                 <div t-if="record.message">
                                     <span
                                         t-out="record.message.raw_value.substring(0,record.messageLength)"
@@ -163,7 +164,7 @@
                                     class="row h-auto social-all-images"
                                 >
                                     <span class="btn btn-md active" role="button">
-                                        + <t t-esc="images.length - 2"/>
+                                        + <t t-esc="images.length - 2" />
                                     </span>
                                 </div>
                                 <div
@@ -180,16 +181,16 @@
                                         />
                                     </t>
                                 </div>
-                                <hr/>
+                                <hr />
                                 <span>Clicks: <t
-                                    t-esc="record.count_post_clicks.raw_value"
-                                /></span>
+                                        t-esc="record.count_post_clicks.raw_value"
+                                    /></span>
                                 <span>Interactions: <t
-                                    t-esc="record.count_post_interactions.raw_value"
-                                /></span>
+                                        t-esc="record.count_post_interactions.raw_value"
+                                    /></span>
                                 <span>Engagement: <t
-                                    t-esc="record.engagement.raw_value"
-                                /></span>
+                                        t-esc="record.count_post_engagement.raw_value"
+                                    /></span>
                             </div>
                         </div>
                     </t>
@@ -204,7 +205,7 @@
         <field name="arch" type="xml">
             <search>
                 <searchpanel>
-                    <field name="state" enable_counters="1"/>
+                    <field name="state" enable_counters="1" />
                     <field
                         name="account_ids"
                         select="multi"
@@ -221,7 +222,7 @@
         <field name="name">Posts</field>
         <field name="res_model">social.network.post</field>
         <field name="view_mode">kanban,tree,form</field>
-        <field name="search_view_id" ref="social_network_post_view_search"/>
+        <field name="search_view_id" ref="social_network_post_view_search" />
         <field name="domain">[]</field>
         <field name="context">{}</field>
     </record>

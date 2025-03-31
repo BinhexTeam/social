@@ -29,8 +29,12 @@
                 t-if="!isViewPostNetwork"
             >
                 <span t-if="!isViewPostNetwork">
-                <i t-if="!model.SyncPosts" class="fa fa-refresh px-1" aria-hidden="true"/>
-                    <span class="social-loader" t-if="model.SyncPosts"/>
+                <i
+                        t-if="!model.SyncPosts"
+                        class="fa fa-refresh px-1"
+                        aria-hidden="true"
+                    />
+                    <span class="social-loader" t-if="model.SyncPosts" />
                     Update
                 </span>
             </button>

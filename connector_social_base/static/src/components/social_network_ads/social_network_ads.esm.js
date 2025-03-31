@@ -1,7 +1,7 @@
 /** @odoo-module **/
 
-import {browser} from "@web/core/browser/browser";
 import {Component} from "@odoo/owl";
+import {browser} from "@web/core/browser/browser";
 
 export class SocialNetworkAds extends Component {
     static template = "connector_social_base.SocialNetworkAds";
