@@ -16,9 +16,15 @@
             groups="base.group_user"
         />
         <menuitem
+            name="Charts"
+            id="social_network_chart_account_action_client_menu"
+            action="social_network_chart_account_action_client"
+            sequence="2"
+        />
+        <menuitem
             name="Post"
             id="social_network_post_menu"
-            sequence="2"
+            sequence="3"
             action="social_network_post_act_window_kanban"
             groups="base.group_user"
         />

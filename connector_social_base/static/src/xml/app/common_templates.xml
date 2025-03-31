@@ -7,10 +7,10 @@
             <div class="d-flex justify-content-between">
                 <div>
                     <i class="fa fa-thumbs-o-up" aria-hidden="true" />
-                    <span class="mx-2" t-esc="record.likes_count.value" />
+                    <span class="mx-2" t-esc="record.like_count.value" />
                 </div>
                 <div>
-                    <span class="mx-1" t-esc="record.comments_count.value" />
+                    <span class="mx-1" t-esc="record.comment_count.value" />
                     comments
                 </div>
             </div>
