@@ -4,7 +4,6 @@
 import json
 
 from odoo import api, fields, models
-from odoo.tools import float_is_zero
 
 
 class SocialNetworkAccount(models.Model):
@@ -33,11 +32,12 @@ class SocialNetworkAccount(models.Model):
     click_count = fields.Integer()
     share_count = fields.Integer()
     interactions_count = fields.Integer(
-        compute="_compute_interactions_count", store=True,
+        compute="_compute_interactions_count",
+        store=True,
         help="""
             Indicates the interactions with the
             publication (clicks, likes, comments,shares).
-        """
+        """,
     )
     impression_count = fields.Integer(
         help="""
@@ -80,7 +80,12 @@ class SocialNetworkAccount(models.Model):
     @api.depends("click_count", "like_count", "share_count", "comment_count")
     def _compute_interactions_count(self):
         for account in self:
-            account.interactions_count = account.click_count + account.like_count + account.share_count + account.comment_count
+            account.interactions_count = (
+                account.click_count
+                + account.like_count
+                + account.share_count
+                + account.comment_count
+            )
 
     def _get_chart_account_statistics(self, start_date, end_date):
         return []
