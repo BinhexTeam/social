@@ -1,8 +1,7 @@
 # Copyright 2025 Binhex <https://www.binhex.cloud>
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
 
-from odoo import _, fields, models
-from odoo.exceptions import ValidationError
+from odoo import fields, models
 from odoo.tools import hmac
 
 
@@ -42,40 +41,15 @@ class SocialNetworkMedia(models.Model):
         pass
 
     def _action_valid_add_account(self):
-        if (
-            self.env["social.network.account"].search_count(
-                [("media_id", "=", self.id)]
-            )
-            == 0
-        ):
-            irConfigParameter = self.env["ir.config_parameter"].sudo()
-            client_id = None
-            if self.media_type == "linkedin":
-                client_id = irConfigParameter.get_param(
-                    f"connector_social_{self.media_type}.{self.media_type}_client", ""
-                )
-            elif self.media_type == "x":
-                client_id = irConfigParameter.get_param(
-                    f"connector_social_{self.media_type}.{self.media_type}_api_key", ""
-                )
-            if client_id:
-                return True
-            else:
-                raise ValidationError(
-                    _(
-                        "You must provide a client ID before setting "
-                        "up your account. Go to Social/Settings."
-                    )
-                )
-        return self.env.ref(
-            "connector_social_base.social_network_post_account_act_window_kanban"
-        ).read()[0]
+        return True
 
     def action_add_account(self, company_id=None):
         self.ensure_one()
         action_account = self._action_valid_add_account()
-        if not isinstance(action_account, bool):
-            return action_account
+        if action_account:
+            return self.env.ref(
+                "connector_social_base.social_network_post_account_act_window_kanban"
+            ).read()[0]
         return self._action_add_account()
 
     def _get_url_redirect(self):
