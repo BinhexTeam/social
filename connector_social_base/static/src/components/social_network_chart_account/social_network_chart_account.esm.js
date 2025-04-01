@@ -55,7 +55,7 @@ export class SocialNetworkChartAccount extends Component {
     loadChart(labels, datasets) {
         if (this.chart) this.chart.destroy();
 
-        this.chart = new Chart(this.chartCtx.el, {
+        this.chart = new window.Chart(this.chartCtx.el, {
             type: "line",
             data: {
                 labels: labels ? labels : this.chartAccount.labels,
