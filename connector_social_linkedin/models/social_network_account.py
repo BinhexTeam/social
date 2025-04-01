@@ -584,8 +584,8 @@ class SocialNetworkAccount(models.Model):
     def _get_chart_account_statistics(
         self, start_date=None, end_date=None, granularity="WEEK"
     ):
-        data = super()._get_chart_account_statistics(start_date, end_date)
-        account_ids = self.search([("media_type", "=", "linkedin")])
+        data = super()._get_chart_account_statistics(start_date, end_date, granularity)
+        account_ids = self or self.search([("media_type", "=", "linkedin")])
         data_linkedin = []
         for account in account_ids:
             start_date_time, end_date_time = account._get_default_filter_date(
@@ -611,8 +611,13 @@ class SocialNetworkAccount(models.Model):
                 params_values=params_values,
                 params_values_char_ignore=params_values_char_ignore,
             )
+            freq = "W-MON"
+            if granularity == "DAY":
+                freq = "D"
+            elif granularity == "MONTH":
+                freq = "ME"
+            chart_weeks = get_weeks(start_date, end_date, freq=freq)
 
-            chart_weeks = get_weeks(start_date, end_date)
             if account_share_statistics:
 
                 def map_chart_data(share_statistics, label, key_data="clickCount"):

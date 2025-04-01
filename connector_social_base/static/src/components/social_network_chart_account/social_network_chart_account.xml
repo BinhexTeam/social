@@ -3,8 +3,14 @@
 
     <t t-name="connector_social_base.SocialNetworkChartAccount">
           <div class="shadow p-2 bg-light">
-             <div class="bg-secondary p-2">
+             <div class="bg-secondary p-2 chart-account-filter">
                  <span class="fs-4" t-esc="chartAccount.name" />
+                 <SocialNetworkFilter
+                    filter.bind="onFilterChart"
+                    clearFilter.bind="clearFilterChart"
+                    filterGranularity="true"
+                    objectId="chartAccount.id"
+                />
              </div>
               <div class="mt-2 px-2">
                   <canvas t-ref="chartAccount" />

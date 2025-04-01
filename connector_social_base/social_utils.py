@@ -128,12 +128,18 @@ def social_url_encode(param_field, params_values, params_values_char_ignore):
 
 
 def _generate_timestamps(date_start=None, date_end=None):
+    if isinstance(date_start, str):
+        date_start = datetime.strptime(date_start, "%Y-%m-%d")
+    if isinstance(date_end, str):
+        date_end = datetime.strptime(date_end, "%Y-%m-%d")
+
     if date_start:
         date_start_time = date_start.timestamp() * 1000
     else:
         date_start_time = datetime.now().timestamp() * 1000
+
     if date_end:
-        date_end_time = date_start_time + date_end.timestamp()
+        date_end_time = date_start_time + date_end.timestamp() * 1000
     else:
         date_end_time = date_start_time + (30 * 86400000)
     return int(date_start_time), int(date_end_time)
@@ -145,5 +151,10 @@ def get_weeks(start_date, end_date, freq="W-MON"):
     )
     end_date = pd.to_datetime(end_date) if isinstance(end_date, str) else end_date
     weeks = pd.date_range(start=start_date, end=end_date, freq=freq)
-    weeks = [(week.strftime("%W/%Y")) for week in weeks]
+    if freq == "D":
+        weeks = [(week.strftime("%d/%m/%Y")) for week in weeks]
+    elif freq == "ME":
+        weeks = [(week.strftime("%m/%Y")) for week in weeks]
+    else:
+        weeks = [(week.strftime("%W/%Y")) for week in weeks]
     return weeks

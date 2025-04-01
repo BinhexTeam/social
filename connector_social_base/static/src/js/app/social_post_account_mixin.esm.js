@@ -1,14 +1,27 @@
 /** @odoo-module */
-import {SocialNetworkImagesDialog} from "../../components/components.esm";
+import {SocialNetworkImagesDialog} from "../../components/social_network_images_dialog/social_network_images_dialog.esm";
 import {_t} from "@web/core/l10n/translation";
 
 export const SocialPostAccountMixin = (T) =>
     class extends T {
+        /**
+         * Handles the click on "Show more" button for the post's message.
+         *
+         * @param {MouseEvent} ev - The click event.
+         */
         onShowMoreMessage(ev) {
             ev.stopPropagation();
             this.record.messageLength = this.record.message.raw_value.length;
         }
 
+        /**
+         * Handles the click on the "Show all images" button.
+         *
+         * Opens a dialog with all images of the post.
+         *
+         * @param {MouseEvent} ev
+         *   The click event.
+         */
         onShowAllImages(ev) {
             ev.stopPropagation();
             this.dialogService.add(SocialNetworkImagesDialog, {
@@ -18,6 +31,15 @@ export const SocialPostAccountMixin = (T) =>
             });
         }
 
+        /**
+         * Handles the click on the "Like" button.
+         *
+         * Calls the ORM method `onLikePost` to like the post. If the like
+         * is successful, shows a notification. Otherwise, shows a message
+         * as a notification.
+         *
+         * @param {MouseEvent} ev - The click event on the "Like" button.
+         */
         async onLikePost(ev) {
             ev.stopPropagation();
             const response = await this.env.model.onLikePost(this.record);
