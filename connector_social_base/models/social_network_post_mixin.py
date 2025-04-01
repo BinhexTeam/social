@@ -8,6 +8,8 @@ from odoo import api, fields, models
 
 class SocialNetworkPostMixin(models.AbstractModel):
     _name = "social.network.post.mixin"
+    _description = "Social Network Post Mixin"
+
     image_urls = fields.Char(compute="_compute_image_urls", store=True)
 
     @api.depends(lambda self: ["image_ids"])
