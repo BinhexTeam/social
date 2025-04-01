@@ -238,7 +238,12 @@ class SocialNetworkPostAccount(models.Model):
 
     def _action_campaign_post(self, post_id):
         res = super()._action_campaign_post(post_id)
-        if self.media_id.media_type == "linkedin" and self.post_id.campaign_id:
+        if (
+            self.media_id.media_type == "linkedin"
+            and self.post_id.campaign_id
+            and self.post_id.campaign_id.campaign_group_id
+            and self.post_id.campaign_id.media_id.media_type == "linkedin"
+        ):
             campaign_linkedin_urn = self._action_campaign()
             if campaign_linkedin_urn and post_id:
                 response = self.account_id._request_linkedin(
