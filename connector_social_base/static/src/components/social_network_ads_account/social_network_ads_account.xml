@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <templates xml:space="preserve">
     <t t-name="connector_social_base.SocialNetworkAdsAccount">
-
         <div class="social-network-ads-account">
-
             <div class="d-flex m-2">
                 <button class="btn btn-primary mx-2" t-on-click="onUpdateAllAds">
                     <i
@@ -17,71 +15,13 @@
                     /> Sync ads
                 </button>
             </div>
-            <div class="d-flex p-lg-3 m-1 px-1 flex-column flex-lg-row">
-                <div class="col-lg-4 col-12 d-flex align-items-center">
-                    <span class="px-2">Campaigns</span>
-                    <select
-                        class="form-select"
-                        aria-label="Campaigns"
-                        t-ref="filter_campaign"
-                    >
-                        <option value="">Select...</option>
-                        <option
-                            t-if="campaigns"
-                            t-foreach="campaigns"
-                            t-as="campaign"
-                            t-key="campaign.id"
-                            t-att-value="campaign.id"
-                        >
-                            <t t-esc="campaign.name" />
-                        </option>
-                    </select>
-                </div>
-                <div
-                    t-if="posts.length > 0"
-                    class="col-lg-4 col-12 d-flex py-2 align-items-center"
-                >
-                    <span class="px-2">Posts</span>
-                    <select class="form-select" aria-label="Posts" t-ref="filter_post">
-                        <option value="">Select...</option>
-                        <option
-                            t-foreach="posts"
-                            t-as="post"
-                            t-key="post.id"
-                            t-att-value="post.id"
-                        >
-                            <t t-esc="post.name" />
-                        </option>
-                    </select>
-                </div>
-                <div class="d-flex justify-content-between py-2">
-                    <input
-                        type="date"
-                        class="form-control w-50 mx-2"
-                        placeholder="Select start date"
-                        t-ref="start_date"
-                        t-on-change="onValidateRangeDate"
-                    />
-                    <input
-                        type="date"
-                        class="form-control w-50"
-                        placeholder="Select end date"
-                        t-ref="end_date"
-                        t-on-change="onValidateRangeDate"
-                    />
-                    </div>
-                <div class="d-flex justify-content-center align-items-center">
-                        <button class="btn btn-primary mx-2" t-on-click="onFilterAds">
-                            <span
-                            class="social-loader"
-                            t-if="social_state.filterAds"
-                        />Filter</button>
-                    <button
-                        class="btn btn-secondary mx-2"
-                        t-on-click="clearFilter"
-                    >Clear</button>
-                    </div>
-            </div>
+            <SocialNetworkFilter
+                filterType="ads"
+                campaigns="campaigns"
+                posts="posts"
+                filter.bind="onFilterAds"
+                clearFilter.bind="clearFilter"
+            />
             <div class="row p-lg-3 p-1 social-ads">
                 <div
                     class="d-flex justify-content-center w-100 h-100"

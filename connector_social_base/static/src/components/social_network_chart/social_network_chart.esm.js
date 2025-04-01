@@ -1,6 +1,6 @@
 /** @odoo-module **/
 import {Component, onWillStart} from "@odoo/owl";
-import {SocialNetworkChartAccount} from "@connector_social_base/components/components.esm";
+import {SocialNetworkChartAccount} from "@connector_social_base/components/social_network_chart_account/social_network_chart_account.esm";
 import {registry} from "@web/core/registry";
 import {useService} from "@web/core/utils/hooks";
 
@@ -10,16 +10,26 @@ export class SocialNetworkChart extends Component {
         SocialNetworkChartAccount,
     };
 
+    /**
+     * Sets up the component.
+     *
+     * @private
+     */
     setup() {
         super.setup();
         this.ormService = useService("orm");
-        this.notification = useService("notification");
         this.socialAccountStatistics = [];
         onWillStart(async () => {
             await this._loadAccountStatistics();
         });
     }
 
+    /**
+     * Loads the statistics for the social network accounts.
+     *
+     * @private
+     * @returns {Promise<void>}
+     */
     async _loadAccountStatistics() {
         this.socialAccountStatistics = await this.ormService.call(
             "social.network.account",

@@ -9,6 +9,12 @@ export class SocialNetworkImagesDialog extends Component {
         Dialog,
     };
 
+    /**
+     * Setups the component.
+     *
+     * @private
+     * @override
+     */
     setup() {
         super.setup();
         this.carouselRef = useRef("carouselRef");
@@ -17,6 +23,13 @@ export class SocialNetworkImagesDialog extends Component {
         });
     }
 
+    /**
+     * Returns the currently active image URL based on navigation direction.
+     *
+     * @param {Boolean} [prev=false] - If true, navigate to the previous image.
+     * @param {Boolean} [next=false] - If true, navigate to the next image.
+     * @returns {String} The URL of the new active image.
+     */
     indexImageActive(prev = false, next = false) {
         let current_index = this.props.images.indexOf(this.state.imageUrlActive);
         if (prev) {
@@ -27,10 +40,22 @@ export class SocialNetworkImagesDialog extends Component {
         return this.props.images[current_index];
     }
 
+    /**
+     * Updates the active image to the previous one in the list.
+     *
+     * - Calls `indexImageActive` with `prev` set to true to get the URL of the previous image.
+     * - Updates the `imageUrlActive` state with the new active image URL.
+     */
     prevImage() {
         this.state.imageUrlActive = this.indexImageActive(true);
     }
 
+    /**
+     * Updates the active image to the next one in the list.
+     *
+     * - Calls `indexImageActive` with `next` set to true to get the URL of the next image.
+     * - Updates the `imageUrlActive` state with the new active image URL.
+     */
     nextImage() {
         this.state.imageUrlActive = this.indexImageActive(false, true);
     }
