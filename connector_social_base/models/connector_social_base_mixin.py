@@ -27,3 +27,8 @@ class ConnectorSocialBaseMixin(models.AbstractModel):
                 f"connector_social_{media_type}.{media_type}_api_secret", ""
             )
             return api_key, api_secret
+
+    def _get_account_by_media(self):
+        return self.env["social.network.account"].search_count(
+            [("media_id", "=", self.id)]
+        )

@@ -3,7 +3,8 @@
 
 from werkzeug.urls import url_encode, url_join
 
-from odoo import fields, models
+from odoo import _, fields, models
+from odoo.exceptions import ValidationError
 
 from ..social_linkedin_utils import (
     _HEADERS_LINKEDIN,
@@ -52,3 +53,27 @@ class SocialMediaOca(models.Model):
             }
         else:
             return result
+
+    def _action_valid_add_account(self):
+        result = super()._action_valid_add_account()
+        if self.media_type == "linkedin":
+            if self._get_account_by_media() == 0:
+                irConfigParameter = self.env["ir.config_parameter"].sudo()
+                client_id = irConfigParameter.get_param(
+                    f"connector_social_{self.media_type}.{self.media_type}_client", ""
+                )
+                if client_id:
+                    result = False
+                else:
+                    raise ValidationError(
+                        _(
+                            """
+                                You must provide a Client ID and Client secret
+                                before setting up your account.
+                                Go to Social/Settings.
+                            """
+                        )
+                    )
+            else:
+                result = True
+        return result
