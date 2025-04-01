@@ -9,6 +9,13 @@ import {useService} from "@web/core/utils/hooks";
 export class NetworkPostAccountKanbanRecord extends SocialPostAccountMixin(
     KanbanRecord
 ) {
+    /**
+     * Called when the component is initialized.
+     *
+     * Sets up the component with the required services, effects and event listeners.
+     *
+     * @override
+     */
     setup() {
         super.setup();
         this.record.messageLength = 150;
@@ -86,6 +93,14 @@ export class NetworkPostAccountKanbanRecord extends SocialPostAccountMixin(
         );
     }
 
+    /**
+     * Handles the click event on the "Post Comment" button.
+     *
+     * - Stops the event propagation.
+     * - Opens a dialog with the comment form and the post images.
+     *
+     * @param {Event} ev - The click event on the "Post Comment" button.
+     */
     onPostComment(ev) {
         ev.stopPropagation();
         this.dialogService.add(SocialNetworkCommentDialog, {
@@ -95,16 +110,42 @@ export class NetworkPostAccountKanbanRecord extends SocialPostAccountMixin(
         });
     }
 
+    /**
+     * Checks if the post exists.
+     *
+     * This function returns a boolean indicating whether the post exists.
+     * Currently, it always returns `true`. In a real implementation, this
+     * would typically involve checking the existence of the post with
+     * the backend service or database.
+     *
+     * @returns {Boolean} `true` if the post exists, otherwise `false`.
+     */
     validPostExist() {
         return true;
     }
 
+    /**
+     * Displays a notification when the post does not exist.
+     *
+     * - Adds a notification with the message "The post does not exist."
+     *   and type "info".
+     */
     messagePostNotExist() {
         this.notification.add(this.messageNotExistPost, {
             type: "info",
         });
     }
 
+    /**
+     * Handles global click events on the kanban record.
+     *
+     * - Checks if the clicked element is within the social dashboard.
+     * - Verifies the existence of a post URL and checks if the post exists.
+     * - Opens the post URL in a new tab if the post exists; otherwise, displays a notification.
+     * - Calls the parent class's `onGlobalClick` method.
+     *
+     * @param {MouseEvent} ev - The global click event.
+     */
     async onGlobalClick(ev) {
         const kanban_social = ev.target.closest("div.oe_kanban_social_dashboard");
         // Checking if the post exists

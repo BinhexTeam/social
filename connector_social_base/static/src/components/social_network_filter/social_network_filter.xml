@@ -1,56 +1,86 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <templates xml:space="preserve">
-
-    <t t-name="connector_social_base.SocialNetworkAccount">
-     <div
-            class="row d-flex flex-column justify-content-between flex-md-row w-100 px-4 "
+	<t t-name="connector_social_base.SocialNetworkFilter">
+		<div
+            class="d-flex justify-content-lg-between p-lg-1 m-1 px-1 flex-column bg-secondary flex-lg-row network-filter"
         >
-            <div
-                class="col-12 col-md-3 shadow bg-white pt-2 cursor-pointer w-md-25 m-2 rounded "
-                t-foreach="props.socialAccounts"
-                t-key="social_account.id"
-                t-as="social_account"
+			<div t-if="filterGranularity" class="d-flex justify-content-between mx-1 w-100">
+				<select class="form-control w-100 my-2 mx-lg-2" t-ref="chart_filter_type">
+					<option value="day">
+						Day
+					</option>
+					<option value="week" selected="selected">
+						Week
+					</option>
+					<option value="month">
+						Month
+					</option>
+				</select>
+			</div>
+			<div
+                t-if="campaigns &amp;&amp; campaigns.length > 0"
+                class="d-flex justify-content-between mx-1 w-100"
             >
-                <div class="d-flex justify-content-between">
-                    <div class="mx-1">
-                        <img
-                            class="me-2"
-                            height="50"
-                            t-attf-src="/web/image/social.network.media/{{ social_account.media_id[0] }}/image"
-                            alt="Social Media"
-                        />
-                    </div>
-                    <span class="mx-1" t-esc="social_account.name" />
-                    <a
-                        t-if="social_account.account_url"
-                        t-att-href="social_account.account_url"
-                        target="_blank"
+				<select
+                    class="form-select w-100 my-2 mx-lg-2"
+                    aria-label="Campaigns"
+                    t-ref="filter_campaign"
+                >
+					<option value="">
+						Select campaign...
+					</option>
+					<option
+                        t-foreach="campaigns"
+                        t-as="campaign"
+                        t-key="campaign.id"
+                        t-att-value="campaign.id"
                     >
-                        Go to account
-                    </a>
-                </div>
-                <div class="d-flex justify-content-between">
-                    <div class="d-flex justify-content-center">
-                        <i class="text-700 fa fa-eye px-1 pt-1" />
-                        <span
-                            class="fw-bold px-1"
-                            t-esc="social_account.impression_count"
-                        />
-                    </div>
-                    <div class="d-flex justify-content-center px-1">
-                        <i class="text-700 fa fa-hand-o-up px-1 pt-1" />
-                        <span
-                            class="fw-bold px-1"
-                            t-esc="social_account.interactions_count"
-                        />
-                    </div>
-                    <div class="d-flex justify-content-center">
-                        <i class="text-700 fa fa-star px-1 pt-1" />
-                        <span class="fw-bold px-1" t-esc="social_account.engagement" />
-                    </div>
-                </div>
-            </div>
-        </div>
-    </t>
-
+						<t t-esc="campaign.name" />
+					</option>
+				</select>
+			</div>
+			<div
+                t-if="posts &amp;&amp; posts.length > 0"
+                class="d-flex justify-content-between mx-1 w-100"
+            >
+				<select
+                    class="form-select w-100 my-2 mx-lg-2 w-100"
+                    aria-label="Posts"
+                    t-ref="filter_post"
+                >
+					<option value="">
+						Select post...
+					</option>
+					<option t-foreach="posts" t-as="post" t-key="post.id" t-att-value="post.id">
+						<t t-esc="post.name" />
+					</option>
+				</select>
+			</div>
+			<div class="d-flex justify-content-between py-2">
+				<input
+                    type="date"
+                    class="form-control w-50 mx-2"
+                    placeholder="Select start date"
+                    t-ref="start_date"
+                    t-on-change="onValidateRangeDate"
+                />
+				<input
+                    type="date"
+                    class="form-control w-50"
+                    placeholder="Select end date"
+                    t-ref="end_date"
+                    t-on-change="onValidateRangeDate"
+                />
+			</div>
+			<div class="d-flex justify-content-center align-items-center">
+				<button class="btn btn-primary mx-2" t-on-click="onFilter">
+					<span class="social-loader d-none" />
+					Filter
+				</button>
+				<button class="btn btn-info mx-2" t-on-click="onClearFilter">
+					Clear
+				</button>
+			</div>
+		</div>
+	</t>
 </templates>

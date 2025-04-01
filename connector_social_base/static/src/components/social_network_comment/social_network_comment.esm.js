@@ -17,6 +17,12 @@ export class SocialNetworkComment extends Component {
         post: {type: Object, required: true},
     };
 
+    /**
+     * Sets up the component's services.
+     *
+     * This method is called once, when the component is set up.
+     * It sets up the component's services and initializes its state.
+     */
     setup() {
         super.setup();
         this.socialService = useService("social_service");
@@ -25,10 +31,26 @@ export class SocialNetworkComment extends Component {
         this.effectService = useService("effect");
     }
 
+    /**
+     * Delete a comment.
+     *
+     * This method is overridden by subclasses to implement the logic to delete a
+     * comment. It should return an object with a `success` property set to `true`
+     * if the comment was deleted successfully, and a `message` property set to
+     * the message to display to the user.
+     *
+     * @returns {Object}
+     */
     async _onDeleteComment() {
         return {};
     }
 
+    /**
+     * Deletes a comment.
+     *
+     * This method calls `_onDeleteComment` and notifies the user of the result.
+     * It also triggers a bus event to reload the comments.
+     */
     async onDeleteComment() {
         const result = await this._onDeleteComment();
         const message =
@@ -40,10 +62,27 @@ export class SocialNetworkComment extends Component {
         this.env.bus.trigger("SOCIAL:RELOAD_COMMENTS");
     }
 
+    /**
+     * Returns the list of media types for which liking a comment is not
+     * supported.
+     *
+     * This method is overridden by subclasses to implement the logic to
+     * determine the list of media types for which liking a comment is not
+     * supported. It should return an array of strings, where each string is
+     * a media type.
+     *
+     * @returns {String[]}
+     */
     mediaNotLikeEnable() {
         return [];
     }
 
+    /**
+     * Likes a comment.
+     *
+     * This method calls `likeComment` on the social service and notifies the
+     * user of the result. It also triggers a bus event to reload the comments.
+     */
     async onLikeComment() {
         const response = await this.socialService.likeComment(
             this.props.post.id.raw_value,
@@ -62,22 +101,61 @@ export class SocialNetworkComment extends Component {
         }
     }
 
+    /**
+     * Replies to a comment.
+     *
+     * This method is overridden by subclasses to implement the logic to reply
+     * to a comment. It should return an object with a `success` property set to
+     * `true` if the comment was replied successfully, and a `message` property
+     * set to the message to display to the user.
+     *
+     * @returns {Object}
+     */
     _onReplyComment() {
         return {};
     }
 
+    /**
+     * Replies to a comment.
+     *
+     * This method triggers a bus event to reload the comments.
+     */
     onReplyComment() {
         this.env.bus.trigger("SOCIAL:RELOAD_COMMENTS");
     }
 
+    /**
+     * Edits a comment.
+     *
+     * This method is overridden by subclasses to implement the logic to edit a
+     * comment. It should return an object with a `success` property set to
+     * `true` if the comment was edited successfully, and a `message` property
+     * set to the message to display to the user.
+     *
+     * @returns {Object}
+     */
     _onEditComment() {
         return {};
     }
 
+    /**
+     * Edits a comment.
+     *
+     * This method triggers a bus event to reload the comments.
+     */
     onEditComment() {
         this.env.bus.trigger("SOCIAL:RELOAD_COMMENTS");
     }
 
+    /**
+     * Edits a comment.
+     *
+     * This method is overridden by subclasses to implement the logic to edit a
+     * comment. It should return an object with a `success` property set to
+     * `true` if the comment was edited successfully, and a `message` property
+     * set to the message to display to the user.
+     *
+     */
     editComment() {
         return;
     }

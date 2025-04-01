@@ -87,11 +87,13 @@ class SocialNetworkAccount(models.Model):
                 + account.comment_count
             )
 
-    def _get_chart_account_statistics(self, start_date, end_date):
+    def _get_chart_account_statistics(self, start_date, end_date, granularity):
         return []
 
-    def get_chart_account_statistics(self, start_date=None, end_date=None):
-        return self._get_chart_account_statistics(start_date, end_date)
+    def get_chart_account_statistics(
+        self, start_date=None, end_date=None, granularity="WEEK"
+    ):
+        return self._get_chart_account_statistics(start_date, end_date, granularity)
 
     def _update_posts_statistics(self, update_all_accounts):
         return []
