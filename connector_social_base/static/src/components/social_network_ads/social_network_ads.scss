@@ -1,3 +1,4 @@
 div.social-network-ads {
-    @include border-radius(1.5rem);
+    border: 1px solid var(--border-color, #dee2e6);
+    background-color: white;
 }
