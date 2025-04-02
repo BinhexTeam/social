@@ -11,7 +11,8 @@ _logger = logging.getLogger(__name__)
 
 class SocialNetworkPost(models.Model):
     _name = "social.network.post"
-    _inherit = ["mail.thread", "mail.activity.mixin", "social.network.post.mixin"]
+    # _inherit = ["mail.thread", "mail.activity.mixin", "social.network.post.mixin"]
+    _inherit = "social.network.post.mixin"
     _description = "Social Network Post"
 
     account_ids = fields.Many2many(
