@@ -2,38 +2,35 @@
 <templates xml:space="preserve">
     <t t-name="connector_social_base.SocialNetworkAdsAccount">
         <div class="social-network-ads-account">
-            <div class="d-flex m-2">
+            <div class="d-flex flex-column">
+            <ControlPanel>
+                <t t-set-slot="control-panel-create-button">
                 <button class="btn btn-primary mx-2" t-on-click="onUpdateAllAds">
                     <i
-                        t-if="!social_state.loaderAds"
-                        class="fa fa-refresh px-1"
-                        aria-hidden="true"
-                    />
+                                t-if="!social_state.loaderAds"
+                                class="fa fa-refresh px-1"
+                                aria-hidden="true"
+                            />
                     <span
-                        class="social-loader"
-                        t-if="social_state.loaderAds"
-                    /> Sync ads
+                                class="social-loader"
+                                t-if="social_state.loaderAds"
+                            /> Sync ads
                 </button>
-            </div>
-            <SocialNetworkFilter
-                filterType="ads"
-                campaigns="campaigns"
-                posts="posts"
-                filter.bind="onFilterAds"
-                clearFilter.bind="clearFilter"
-            />
+                </t>
+
+                <t t-set-slot="control-panel-navigation-additional">
+                    <SocialNetworkFilter
+                            filter.bind="onFilterAds"
+                            searchEnable="true"
+                        />
+                </t>
+			</ControlPanel>
+        </div>
+
+
             <div class="row p-lg-3 p-1 social-ads">
                 <div
-                    class="d-flex justify-content-center w-100 h-100"
-                    t-if="ads.length === 0"
-                >
-                    <img
-                        t-attf-src="/connector_social_base/static/img/app/no_result.png"
-                        class="o_object_fit_cover rounded w-75 h-75 w-lg-25 h-lg-25"
-                    />
-                </div>
-                <div
-                    class="px-2 col-12 col-lg-4"
+                    class="px-2 col-12 col-lg-3"
                     t-foreach="ads"
                     t-as="ad"
                     t-key="ad.id"
