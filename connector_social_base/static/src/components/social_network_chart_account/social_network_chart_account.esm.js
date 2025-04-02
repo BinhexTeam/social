@@ -1,6 +1,7 @@
 /** @odoo-module **/
 
 import {Component, onMounted, useRef} from "@odoo/owl";
+import {ControlPanel} from "@web/search/control_panel/control_panel";
 import {SocialNetworkFilter} from "../social_network_filter/social_network_filter.esm";
 import {useService} from "@web/core/utils/hooks";
 
@@ -10,6 +11,7 @@ export class SocialNetworkChartAccount extends Component {
         socialChartAccount: {type: Object, required: true},
     };
     static components = {
+        ControlPanel,
         SocialNetworkFilter,
     };
 
@@ -93,15 +95,11 @@ export class SocialNetworkChartAccount extends Component {
      */
     async onFilterChart({id, startDate, endDate, chartFilterType}) {
         let updateChart = [];
-        let start_date = null;
-        let end_date = null;
-        if (startDate) start_date = startDate.toFormat("yyyy-MM-dd");
-        if (endDate) end_date = endDate.toFormat("yyyy-MM-dd");
-        if (start_date || end_date || chartFilterType)
+        if (startDate || endDate || chartFilterType)
             updateChart = await this.ormService.call(
                 "social.network.account",
                 "get_chart_account_statistics",
-                [id, start_date, end_date, chartFilterType.toUpperCase()]
+                [id, startDate, endDate, chartFilterType.toUpperCase()]
             );
         if (updateChart.length > 0)
             this.loadChart(updateChart[0].labels, updateChart[0].datasets);

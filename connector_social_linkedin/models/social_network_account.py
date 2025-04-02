@@ -806,7 +806,6 @@ class SocialNetworkAccount(models.Model):
         )
 
         ads_parse = []
-        ads_ugc_posts_parse = []
         for ad in ads:
             statistic = list(
                 filter(
@@ -848,22 +847,14 @@ class SocialNetworkAccount(models.Model):
                 }
             )
             ads_parse.append(ad)
-            if post:
-                ads_ugc_posts_parse.append(post)
-        return ads_parse, ads_campaigns, ads_ugc_posts_parse
+        return ads_parse
 
     def _load_ads_accounts(self):
         ads = super()._load_ads_accounts()
         account_ids = self.search([("media_type", "=", "linkedin")])
-        campaigns = []
-        posts = []
         for account in account_ids:
-            ads_linkedin, campaigns_linkedin, ads_ugc_posts = account._load_ads()
+            ads_linkedin = account._load_ads()
             ads = list(itertools.chain(ads, ads_linkedin))
-            campaigns = list(itertools.chain(campaigns, campaigns_linkedin))
-            posts = list(itertools.chain(posts, ads_ugc_posts))
         return {
             "ads": ads,
-            "campaigns": campaigns,
-            "posts": posts,
         }

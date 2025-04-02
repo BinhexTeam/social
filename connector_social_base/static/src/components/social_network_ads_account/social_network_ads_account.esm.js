@@ -1,9 +1,9 @@
 /** @odoo-module **/
 
 import {Component, onWillStart, useState} from "@odoo/owl";
+import {ControlPanel} from "@web/search/control_panel/control_panel";
 import {SocialNetworkAds} from "../social_network_ads/social_network_ads.esm";
 import {SocialNetworkFilter} from "../social_network_filter/social_network_filter.esm";
-import {_t} from "@web/core/l10n/translation";
 import {registry} from "@web/core/registry";
 import {useService} from "@web/core/utils/hooks";
 
@@ -12,6 +12,7 @@ const {DateTime} = luxon;
 export class SocialNetworkAdsAccount extends Component {
     static template = "connector_social_base.SocialNetworkAdsAccount";
     static components = {
+        ControlPanel,
         SocialNetworkAds,
         SocialNetworkFilter,
     };
@@ -38,48 +39,27 @@ export class SocialNetworkAdsAccount extends Component {
         });
     }
 
-    /**
-     * Filter ads based on a given campaign, post, and date range.
-     *
-     * @param {Object} item - The ad to be filtered.
-     * @param {String} [campaign] - The id of the campaign to filter by.
-     * @param {String} [post] - The id of the post to filter by.
-     * @param {DateTime} [startDate] - The start date of the range to filter by.
-     * @param {DateTime} [endDate] - The end date of the range to filter by.
-     * @returns {Boolean} - Whether the ad should be shown given the filter criteria.
-     */
-    filter_ads(item, campaign, post, startDate, endDate) {
+    filter_ads(item, startDate, endDate, val_search) {
         const created = DateTime.fromFormat(item.created, "dd/MM/yyyy");
+        const start_date = DateTime.fromFormat(startDate, "yyyy-MM-dd");
+        const end_date = DateTime.fromFormat(endDate, "yyyy-MM-dd");
         return (
-            (campaign ? item.campaign.id === parseInt(campaign, 10) : true) &&
-            (post ? item.reference === post : true) &&
-            (startDate ? created >= startDate : true) &&
-            (endDate ? created <= endDate : true)
+            (start_date ? created >= start_date : false) &&
+            (end_date ? created <= end_date : false) &&
+            (val_search
+                ? (item.campaign.name
+                      ? item.campaign.name.includes(val_search)
+                      : false) ||
+                  (item.post.name ? item.post.name.includes(val_search) : false) ||
+                  item.status.includes(val_search)
+                : true)
         );
     }
 
-    /**
-     * Handles the filtering of ads based on campaign, post, and date range.
-     *
-     * If no campaign, post, or date range is selected, a notification is
-     * displayed asking the user to select a filter. If some filter criteria
-     * are selected, the ads are filtered based on the `filter_ads` method and
-     * the filtered ads are stored in the component's state. If no filter
-     * criteria are selected, the filter is cleared and all ads are shown again.
-     *
-     * @param {{startDate: DateTime, endDate: DateTime, campaign: String, post: String}} params - The filter criteria.
-     */
-    onFilterAds({startDate, endDate, campaign, post}) {
-        if (!campaign && !post && !startDate && !endDate) {
-            this.notification.add(
-                _t("Please select a campaign or a post or a range date."),
-                {
-                    type: "danger",
-                }
-            );
-        } else if (campaign || post || startDate || endDate) {
+    onFilterAds({startDate, endDate, val_search}) {
+        if (val_search || startDate || endDate) {
             this.social_state.socialAds = this.socialAdsAccount.ads.filter((item) => {
-                return this.filter_ads(item, campaign, post, startDate, endDate);
+                return this.filter_ads(item, startDate, endDate, val_search);
             });
         } else {
             this.clearFilter();

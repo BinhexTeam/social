@@ -1,86 +1,67 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <templates xml:space="preserve">
 	<t t-name="connector_social_base.SocialNetworkFilter">
-		<div
-            class="d-flex justify-content-lg-between p-lg-1 m-1 px-1 flex-column bg-secondary flex-lg-row network-filter"
-        >
-			<div t-if="filterGranularity" class="d-flex justify-content-between mx-1 w-100">
-				<select class="form-control w-100 my-2 mx-lg-2" t-ref="chart_filter_type">
-					<option value="day">
-						Day
-					</option>
-					<option value="week" selected="selected">
-						Week
-					</option>
-					<option value="month">
-						Month
-					</option>
-				</select>
-			</div>
-			<div
-                t-if="campaigns &amp;&amp; campaigns.length > 0"
-                class="d-flex justify-content-between mx-1 w-100"
+		<div class="d-flex justify-content-between align-items-center social-network-filter">
+
+            <div
+                t-if="props.searchEnable"
+                class="w-50 rounded d-flex justify-content-start align-items-center border-1 search-filter mx-4"
             >
-				<select
-                    class="form-select w-100 my-2 mx-lg-2"
-                    aria-label="Campaigns"
-                    t-ref="filter_campaign"
-                >
-					<option value="">
-						Select campaign...
-					</option>
-					<option
-                        t-foreach="campaigns"
-                        t-as="campaign"
-                        t-key="campaign.id"
-                        t-att-value="campaign.id"
-                    >
-						<t t-esc="campaign.name" />
-					</option>
-				</select>
-			</div>
-			<div
-                t-if="posts &amp;&amp; posts.length > 0"
-                class="d-flex justify-content-between mx-1 w-100"
+                <span class="fa fa-search p-2" />
+                <input
+                    type="text"
+                    class="form-control border-0"
+                    placeholder="Search..."
+                    t-on-keydown="onInputSearch"
+                    t-ref="inputSearch"
+                />
+            </div>
+
+            <Dropdown
+                t-if="props.filterGranularity"
+                class="'btn-group flex-grow-1 flex-md-grow-0 mx-1'"
+                togglerClass="'btn btn-secondary'"
+                showCaret="true"
             >
-				<select
-                    class="form-select w-100 my-2 mx-lg-2 w-100"
-                    aria-label="Posts"
-                    t-ref="filter_post"
-                >
-					<option value="">
-						Select post...
-					</option>
-					<option t-foreach="posts" t-as="post" t-key="post.id" t-att-value="post.id">
-						<t t-esc="post.name" />
-					</option>
-				</select>
-			</div>
-			<div class="d-flex justify-content-between py-2">
-				<input
-                    type="date"
-                    class="form-control w-50 mx-2"
-                    placeholder="Select start date"
-                    t-ref="start_date"
-                    t-on-change="onValidateRangeDate"
+			<t t-set-slot="toggler">
+				<t t-esc="state.currentFilterType.name" />
+			</t>
+                <t t-foreach="filter_types" t-as="flt" t-key="flt.id">
+				<DropdownItem
+                        onSelected="() => this.onSelectTypeRange(flt)"
+                        t-esc="flt.name"
+                        class="{selected : flt.id == state.currentFilterType.id }"
+                    />
+			</t>
+		    </Dropdown>
+
+            <div class="d-flex flex-column mx-1">
+                <input
+                    t-on-click="() => this.onSelectShowDate('start')"
+                    type="text"
+                    class="form-control cursor-pointer"
+                    t-att-value="state.currentStartDate"
                 />
-				<input
-                    type="date"
-                    class="form-control w-50"
-                    placeholder="Select end date"
-                    t-ref="end_date"
-                    t-on-change="onValidateRangeDate"
+                <DateTimePicker
+                    t-if="state.showStartDate"
+                    type="'date'"
+                    onSelect.bind="onSelectStartDate"
                 />
-			</div>
-			<div class="d-flex justify-content-center align-items-center">
-				<button class="btn btn-primary mx-2" t-on-click="onFilter">
-					<span class="social-loader d-none" />
-					Filter
-				</button>
-				<button class="btn btn-info mx-2" t-on-click="onClearFilter">
-					Clear
-				</button>
-			</div>
-		</div>
+            </div>
+            <div class="d-flex flex-column">
+                <input
+                    t-on-click="() => this.onSelectShowDate('end')"
+                    type="text"
+                    class="form-control cursor-pointer"
+                    t-att-value="state.currentEndDate"
+                />
+                <DateTimePicker
+                    t-if="state.showEndDate"
+                    type="'date'"
+                    onSelect.bind="onSelectEndDate"
+                />
+            </div>
+
+        </div>
 	</t>
 </templates>
