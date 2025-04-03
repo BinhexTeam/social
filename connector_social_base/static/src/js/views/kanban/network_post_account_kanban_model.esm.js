@@ -20,8 +20,8 @@ export class NetworkPostAccountKanbanModel extends RelationalModel {
      * - interactions_count
      * - engagement
      */
-    _loadAccounts() {
-        return this.orm.searchRead(
+    async _loadAccounts() {
+        return await this.orm.searchRead(
             "social.network.account",
             this._get_domain_network_account(),
             [
@@ -42,8 +42,8 @@ export class NetworkPostAccountKanbanModel extends RelationalModel {
      * an array of objects with `id` and `name` properties, representing
      * the social network accounts that are not yet synchronized.
      */
-    _loadAccountsBasic() {
-        return this.orm.searchRead(
+    async _loadAccountsBasic() {
+        return await this.orm.searchRead(
             "social.network.account",
             this._get_domain_network_account(),
             ["id", "name"]
@@ -59,8 +59,8 @@ export class NetworkPostAccountKanbanModel extends RelationalModel {
      *
      * @returns {Promise} A promise that resolves when the update operation is complete.
      */
-    onUpdatePostsAndStatistics() {
-        return this.orm.silent.call(
+    async onUpdatePostsAndStatistics() {
+        return await this.orm.silent.call(
             "social.network.account",
             "update_posts_statistics",
             [[], true]

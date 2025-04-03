@@ -16,8 +16,8 @@ export class NetworkPostAccountKanbanController extends KanbanController {
         this.model.SyncPosts = false;
         onWillStart(async () => {
             if (this.isViewPostNetwork) return;
-            await this._onUpdatePostsAndStatistics();
             this.socialAccounts = await this.model._loadAccounts();
+            await this._onUpdatePostsAndStatistics();
         });
         useSubEnv({
             model: this.model,

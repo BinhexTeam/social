@@ -6,7 +6,6 @@ from odoo import fields, models
 
 class SocialNetworkPostAccount(models.Model):
     _name = "social.network.post.account"
-    # _inherit = ["mail.thread", "mail.activity.mixin", "social.network.post.mixin"]
     _inherit = "social.network.post.mixin"
     _description = "Social Live Post"
 
