@@ -23,3 +23,11 @@ class SocialNetwork(http.Controller):
             _logger.error(e)
             return request.redirect("/web")
         return request.redirect("/")
+
+    @route(
+        ["/linkedin/webhook"],
+        type="http",
+        auth="user",
+    )
+    def social_linkedin_webhook(self, **kwargs):
+        _logger.error(f"WEBHOOK LINKEDIN: {kwargs}")
