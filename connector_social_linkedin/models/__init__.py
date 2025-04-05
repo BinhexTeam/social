@@ -2,6 +2,7 @@
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
 
 from . import (
+    connector_social_base_mixin,
     res_config_settings,
     social_network_account,
     social_network_media,
