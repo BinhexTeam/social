@@ -12,17 +12,13 @@ from odoo.addons.connector_social_linkedin.models.social_network_account import 
     SocialNetworkAccount,
 )
 from odoo.addons.connector_social_linkedin.tests.test_common_linkedin import (
+    PATCH_ACCOUNT_LINKEDIN,
     TestSocialNetworkCommonLinkedin,
 )
 
 from ..social_linkedin_utils import (
     _FIELDS_CAMPAIGN_LINKEDIN,
     _FIELDS_STATISTIC_LINKEDIN,
-)
-
-PATCH_ACCOUNT_LINKEDIN = (
-    "odoo.addons.connector_social_linkedin.models."
-    "social_network_account.SocialNetworkAccount.{}"
 )
 
 
@@ -350,6 +346,8 @@ class TestSocialNetworkLinkedin(LinkedinMockMixin, TestSocialNetworkCommonLinked
         self.assertEqual(len(result), 2)
         self.assertEqual(result[0]["id"], "123")
         self.assertEqual(result[1]["id"], "456")
+        start_date = f"(startDate:(values:{start_time})"
+        end_date = f"endDate:(values:{end_time})"
         mock_request_linkedin.assert_called_once_with(
             endpoint="/adCampaignsV2",
             headers=self.SocialMediaLinkedin._get_linkedin_headers(
@@ -358,7 +356,7 @@ class TestSocialNetworkLinkedin(LinkedinMockMixin, TestSocialNetworkCommonLinked
             params_fields=["q", "search", "fields", "count"],
             params_values={
                 "q": "search",
-                "search": f"(startDate:(values:{start_time}),endDate:(values:{end_time}),"
+                "search": f"{start_date},{end_date},"
                 "test:true,campaigns:(values:List(123)))",
                 "fields": _FIELDS_CAMPAIGN_LINKEDIN,
                 "count": 100,
@@ -397,6 +395,8 @@ class TestSocialNetworkLinkedin(LinkedinMockMixin, TestSocialNetworkCommonLinked
         self.assertEqual(len(result), 2)
         self.assertEqual(result[0]["campaign"], "123")
         self.assertEqual(result[1]["campaign"], "456")
+        start_range = "(start:(year:2025,month:1,day:1)"
+        end_range = "end:(year:2025,month:1,day:31))"
         mock_request_linkedin.assert_called_once_with(
             endpoint="/adAnalyticsV2",
             headers=linkedin_account.media_id._get_linkedin_headers(
@@ -415,7 +415,7 @@ class TestSocialNetworkLinkedin(LinkedinMockMixin, TestSocialNetworkCommonLinked
                 "q": "statistics",
                 "pivots": ["CREATIVE"],
                 "timeGranularity": "ALL",
-                "dateRange": "(start:(year:2025,month:1,day:1),end:(year:2025,month:1,day:31))",
+                "dateRange": f"{start_range},{end_range}",
                 "fields": _FIELDS_STATISTIC_LINKEDIN,
                 "count": 100,
                 "accounts": [
