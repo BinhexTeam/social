@@ -35,13 +35,15 @@ from ..social_linkedin_utils import (
 class SocialNetworkAccount(models.Model):
     _inherit = "social.network.account"
 
-    restli_client = RestliClient()
-
     linkedin_account_id = fields.Char(
         compute="_compute_linkedin_account_id", store=True
     )
     linkedin_account_urn = fields.Char()
     linkedin_refresh_token_expires_in = fields.Date()
+
+    @api.model
+    def _get_restli_client(self):
+        return RestliClient()
 
     def _fields_account_url(self):
         return super()._fields_account_url() + [
@@ -61,6 +63,7 @@ class SocialNetworkAccount(models.Model):
                     social_account.linkedin_account_urn.split(":")[-1]
                 )
 
+    @api.model
     def _request_linkedin(
         self,
         method="GET",
@@ -273,7 +276,7 @@ class SocialNetworkAccount(models.Model):
                     for asset_id in assets_image_post
                 ]
 
-            response = self.restli_client.create(
+            response = self._get_restli_client.create(
                 resource_path=resource_path,
                 entity=entity_post,
                 access_token=self.access_token,
@@ -309,14 +312,13 @@ class SocialNetworkAccount(models.Model):
             organization["organization"].split(":")[-1]
             for organization in response.get("elements", [])
         ]
-        response = self.restli_client.batch_get(
+        response_organizations = self._get_restli_client.batch_get(
             resource_path="/organizations",
             ids=organization_ids,
             access_token=access_token,
             version_string=_VERSION_STRING,
         )
-
-        return response.results.items()
+        return response_organizations.results.items()
 
     def create_account_linkedin(self, token):
         access_token = token.get("access_token", False)
@@ -667,7 +669,7 @@ class SocialNetworkAccount(models.Model):
                 )
         return list(itertools.chain(data, data_linkedin))
 
-    def _get_campaigns(self, start_date, end_date, campaign_ids=None):
+    def _get_campaigns(self, start_date=None, end_date=None, campaign_ids=None):
         start_time, end_time = _generate_timestamps(start_date, end_date)
         param_values = {
             "q": "search",
@@ -701,14 +703,24 @@ class SocialNetworkAccount(models.Model):
 
     def _get_statistics(self, ads_ids=None, start_date=None, end_date=None):
         start_date, end_date = self._get_default_filter_date(start_date, end_date)
-        start_date = start_date.strftime("%Y-%m-%d").split("-")
+        start_date = (
+            start_date.strftime("%Y-%m-%d").split("-")
+            if not isinstance(start_date, str)
+            else start_date
+        )
         parse_start_date = "(year:{},month:{},day:{})".format(
             start_date[0],
-            start_date[1],
-            start_date[2],
+            int(start_date[1]),
+            int(start_date[2]),
         )
-        end_date = end_date.strftime("%Y-%m-%d").split("-")
-        parse_end_date = f"(year:{end_date[0]},month:{end_date[1]},day:{end_date[2]})"
+        end_date = (
+            end_date.strftime("%Y-%m-%d").split("-")
+            if not isinstance(end_date, str)
+            else end_date
+        )
+        parse_end_date = (
+            f"(year:{end_date[0]},month:{int(end_date[1])},day:{int(end_date[2])})"
+        )
         dateStatisticsRange = f"(start:{parse_start_date},end:{parse_end_date})"
 
         params_fields = [
