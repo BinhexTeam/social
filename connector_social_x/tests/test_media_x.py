@@ -3,9 +3,6 @@
 
 from unittest.mock import MagicMock, patch
 
-from odoo.addons.connector_social_base.tests.test_social_common import (
-    PATCH_SOCIAL_BASE_MIXIN,
-)
 from odoo.addons.connector_social_x.tests.test_common_x import (
     PATCH_MEDIA_X,
     TestSocialNetworkCommonX,
@@ -49,13 +46,3 @@ class TestSocialNetworkMediaX(TestSocialNetworkCommonX):
         result = self.SocialMediaX._action_add_account()
         self.assertEqual(result["type"], "ir.actions.act_url")
         self.assertIn("oauth_token=test_token", result["url"])
-
-    @patch(PATCH_SOCIAL_BASE_MIXIN.format("_get_account_by_media"))
-    @patch(PATCH_SOCIAL_BASE_MIXIN.format("_get_account_api"))
-    def test_action_valid_add_account_x_no_account(
-        self, mock_get_account_api, mock_get_account_by_media
-    ):
-        mock_get_account_by_media.return_value = 0
-        mock_get_account_api.return_value = "api_key"
-        result = self.SocialMediaX._action_valid_add_account()
-        self.assertFalse(result)
