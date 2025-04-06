@@ -4,6 +4,12 @@
 from odoo.tests import TransactionCase
 
 PATCH_SOCIAL_BASE_UTILS = "odoo.addons.connector_social_base.social_utils.{}"
+PATCH_SOCIAL_BAS_MODELS = "odoo.addons.connector_social_base.models"
+PATCH_SOCIAL_BASE_MIXIN = (
+    "{}.connector_social_base_mixin.ConnectorSocialBaseMixin.{}".format(
+        PATCH_SOCIAL_BAS_MODELS, "{}"
+    )
+)
 
 
 class TestSocialNetworkCommon(TransactionCase):

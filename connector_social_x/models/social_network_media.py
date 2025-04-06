@@ -14,7 +14,7 @@ from ..social_x_utils import _get_oauth
 _logger = logging.getLogger(__name__)
 
 
-class SocialMediaOca(models.Model):
+class SocialNetworkMedia(models.Model):
     _inherit = "social.network.media"
 
     media_type = fields.Selection(selection_add=[("x", "X")])
