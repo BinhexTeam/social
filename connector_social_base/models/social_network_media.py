@@ -43,8 +43,7 @@ class SocialNetworkMedia(models.Model):
     def _action_valid_add_account(self):
         return True
 
-    def action_add_account(self, company_id=None):
-        self.ensure_one()
+    def action_add_account(self):
         action_account = self._action_valid_add_account()
         if action_account:
             return self.env.ref(

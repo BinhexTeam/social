@@ -13,7 +13,7 @@ from ..social_linkedin_utils import (
 )
 
 
-class SocialMediaOca(models.Model):
+class SocialNetworkMedia(models.Model):
     _inherit = "social.network.media"
 
     media_type = fields.Selection(
