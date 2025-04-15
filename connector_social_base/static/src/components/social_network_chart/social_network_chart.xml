@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates xml:space="preserve">
+    <t t-name="connector_social_base.SocialNetworkChart">
+        <div class="social-chart row mt-2">
+                    <SocialNetworkChartAccount
+                t-foreach="socialAccountStatistics"
+                t-as="chartAccount"
+                t-key="chartAccount.id"
+                socialChartAccount="chartAccount"
+            />
+        </div>
+    </t>
+</templates>

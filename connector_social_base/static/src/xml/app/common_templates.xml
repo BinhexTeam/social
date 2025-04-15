@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates xml:space="preserve">
+
+    <!-- POST ACCOUNT FOOTER -->
+    <t t-name="connector_social_base.postAccountFooter">
+        <div class="row pt-2">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <i class="fa fa-thumbs-o-up" aria-hidden="true" />
+                    <span class="mx-2" t-esc="record.like_count.value" />
+                </div>
+                <div>
+                    <span class="mx-1" t-esc="record.comment_count.value" />
+                    comments
+                </div>
+            </div>
+        </div>
+        <div t-if="record.post_account_url.value" class="row pt-2">
+            <div class="d-flex justify-content-center">
+                <hr class="my-2 w-95" />
+            </div>
+        </div>
+        <div t-if="record.post_account_url.value" class="row pt-2">
+            <div class="d-flex justify-content-between align-items-center">
+                <span class="fs-6 social-like-post">
+                    <i class="fa fa-thumbs-o-up" aria-hidden="true" />
+                    Recommend
+                </span>
+                <span class="fs-6 social-post-comment">
+                    <i class="fa fa-comments" aria-hidden="true" />
+                    Comment
+                </span>
+            </div>
+        </div>
+    </t>
+
+    <!-- POST ACCOUNT HEADER -->
+    <t t-name="connector_social_base.postAccountHeader">
+        <div class="row">
+            <div class="col-2">
+                <img
+                    t-attf-src="/connector_social_#{record.media_type.raw_value}/static/img/#{record.media_type.raw_value}.png"
+                    class="o_object_fit_cover rounded"
+                    width="50"
+                    height="50"
+                />
+            </div>
+            <div class="col-6">
+                <span t-esc="record.author.raw_value" />
+            </div>
+            <div t-if="published_time" class="col-4 d-flex justify-content-end">
+                <span class="mx-2" t-esc="published_time" />
+
+                <Dropdown t-if="actionMenuComment" position="'left-start'">
+                    <t t-set-slot="toggler">
+                        <i class="fa fa-ellipsis-v" aria-hidden="true" />
+                    </t>
+                    <DropdownItem onSelected.bind="onEditComment">Edit</DropdownItem>
+                    <DropdownItem
+                        onSelected.bind="onDeleteComment"
+                    >Delete</DropdownItem>
+                </Dropdown>
+            </div>
+            <div t-else="" class="col-3">
+                <span t-esc="record.published_date" />
+            </div>
+        </div>
+    </t>
+
+    <!-- IMAGES -->
+    <t t-name="connector_social_base.Images">
+        <t t-set="countShowImage" t-value="record.countShowImage" />
+        <t t-if="images">
+            <div class="d-flex justify-content-center flex-wrap gap-3 h-75">
+                <t t-foreach="images.slice(0,countShowImage)" t-as="img" t-key="img">
+                    <img t-att-src="img" class="img-fluid img-posts" />
+                </t>
+            </div>
+        </t>
+    </t>
+
+    <t t-name="connector_social_base.postAccountImages">
+        <div
+            t-if="images.length > record.countShowImage"
+            class="row h-auto social-all-images"
+        >
+            <span class="btn btn-md active" role="button">
+                                        +                <t
+                    t-esc="images.length - record.countShowImage"
+                />
+            </span>
+        </div>
+
+        <div class="row pt-2 h-auto">
+            <div
+                t-attf-class="col-12 social-post-images  pointer-cursor
+                                    #{images.length > record.countShowImage ? 'social-all-images' : ''}"
+            >
+                <t t-call="connector_social_base.Images" />
+            </div>
+        </div>
+    </t>
+
+    <t t-name="connector_social_base.postDialogAccountImages">
+        <div
+            t-on-click="onShowAllImages"
+            t-if="images.length > record.countShowImage"
+            class="row h-auto social-all-images"
+        >
+            <span class="btn btn-md active" role="button">
+                                        +                <t
+                    t-esc="images.length - record.countShowImage"
+                />
+            </span>
+        </div>
+
+        <div class="row pt-2 h-auto">
+            <div
+                t-on-click="onShowAllImages"
+                t-attf-class="col-12 social-post-images pointer-cursor"
+            >
+                <t t-call="connector_social_base.Images" />
+            </div>
+        </div>
+    </t>
+
+    <!-- POST ACCOUNT MESSAGES AND IMAGES -->
+    <t t-name="connector_social_base.postAccountMessageImages">
+        <div class="row h-auto">
+            <div t-if="!isDialog" class="col-12 social-text-justify">
+                <span
+                    t-out="record.message.raw_value.substring(0,record.messageLength)"
+                />
+                <span
+                    t-if="record.message.raw_value.length > record.messageLength"
+                    class="cursor-pointer show-more-message"
+                >...see more</span>
+            </div>
+            <div t-else="" class="col-12">
+                <span t-esc="record.message.raw_value" />
+            </div>
+        </div>
+
+        <t t-if="!isDialog" t-call="connector_social_base.postAccountImages" />
+        <t t-if="isDialog" t-call="connector_social_base.postDialogAccountImages" />
+
+
+    </t>
+
+</templates>
