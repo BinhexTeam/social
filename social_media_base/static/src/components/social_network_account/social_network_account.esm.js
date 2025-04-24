@@ -1,0 +1,10 @@
+/** @odoo-module **/
+
+import {Component} from "@odoo/owl";
+
+export class SocialNetworkAccount extends Component {
+    static template = "social_media_base.SocialNetworkAccount";
+    static props = {
+        socialAccounts: {type: Array},
+    };
+}
