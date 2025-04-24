@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<templates xml:space="preserve">
+
+    <t t-name="social_media_base.CommentAction">
+        <div
+            t-attf-class="d-flex justify-content-start align-items-center #{!state.commentEmpty ? 'col-9' : ''}"
+        >
+            <div
+                class="o_social_emoji_dropdown o_social_subtle_btn px-3 py-1"
+                t-ref="social-emoji"
+            >
+                <i class="fa fa-smile-o" />
+            </div>
+            <FileUploader
+                inputName="'attachment'"
+                acceptedFileExtensions="'image/*'"
+                onUploaded.bind="onSelectImage"
+            >
+                <t t-set-slot="toggler">
+                    <i class="fa fa-image" title="Add image" />
+                </t>
+            </FileUploader>
+        </div>
+        <div
+            t-if="!state.commentEmpty"
+            t-attf-class="#{!state.commentEmpty ? 'col-3' : ''}"
+        >
+            <button
+                class="btn btn-primary"
+                t-on-click="onCreateComment"
+            >Comment</button>
+        </div>
+    </t>
+
+    <t t-name="social_media_base.CommentPost">
+        <div class="mt-2 h-25 social-post-comment h-auto">
+            <div class="d-flex justify-content-between w-100">
+                <div class="w-100">
+                <textarea
+                        t-on-keydown="onKeyDownComment"
+                        t-ref="comment-textarea"
+                        placeholder="Write a comment..."
+                        class="form-control border-0 mr-2"
+                    />
+            </div>
+                <div t-if="state.commentEmpty" class="m-2">
+                <t t-call="social_media_base.CommentAction" />
+            </div>
+
+            </div>
+
+            <div t-if="state.imageSrc" class="row m-2 position-relative d-inline-block">
+                <img
+                    t-att-src="state.imageSrc"
+                    class="img-fluid img-post-comment"
+                    t-on-mouseover="onMouseOverImage"
+                    t-on-mouseleave="onMouseLeaveImage"
+                />
+                <button
+                    class="btn btn-primary position-absolute top-0 remove-comment-image cursor-pointer d-none"
+                    t-ref="btn-remove-image"
+                    t-on-click="removeImage"
+                >
+                    X
+                </button>
+            </div>
+
+            <div t-if="!state.commentEmpty" class="row p-2">
+                <t t-call="social_media_base.CommentAction" />
+            </div>
+        </div>
+    </t>
+
+    <t t-name="social_media_base.SocialNetworkCommentDialog">
+        <Dialog size="'md'" contentClass="'dialog-post-comment'" title="'Comments'">
+            <div class="container dialog_social_comment">
+                <t t-set="record" t-value="props.post" />
+                <t t-set="images" t-value="props.images" />
+                <t t-set="isDialog" t-value="true" />
+                <t t-call="social_media_base.postAccountHeader" />
+                <t t-call="social_media_base.postAccountMessageImages" />
+                <t t-call="social_media_base.CommentPost" />
+
+                <div
+                    t-if="comments.length > 0"
+                    class="shadow row m-3 p-2 rounded-5 post-comments "
+                    t-foreach="comments"
+                    t-as="comment"
+                    t-key="comment.id"
+                >
+                    <SocialNetworkComment socialComment="comment" post="record" />
+                </div>
+
+            </div>
+        </Dialog>
+    </t>
+</templates>
