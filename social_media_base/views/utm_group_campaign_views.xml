@@ -9,8 +9,6 @@
         <field name="arch" type="xml">
             <tree editable="bottom">
                 <field name="name" />
-                <field name="total_budget" required="1" />
-                <field name="currency_id" required="1" />
             </tree>
         </field>
     </record>

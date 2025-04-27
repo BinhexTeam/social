@@ -16,7 +16,6 @@
         "views/social_network_account_views.xml",
         "views/social_network_post_views.xml",
         "views/social_network_post_account_views.xml",
-        "views/utm_campaign_views.xml",
         "views/utm_group_campaign_views.xml",
         "views/social_network_action_client_views.xml",
         "views/res_config_settings_views.xml",
