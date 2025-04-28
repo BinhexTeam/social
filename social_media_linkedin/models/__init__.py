@@ -7,4 +7,6 @@ from . import (
     social_network_account,
     social_network_media,
     social_network_post_account,
+    utm_campaign,
+    utm_group_campaign,
 )

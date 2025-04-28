@@ -9,11 +9,3 @@ class UtmGroupCampaign(models.Model):
     _description = "UTM Group Campaign"
 
     name = fields.Char()
-    linkedin_urn = fields.Char(string="Linkedin URN")
-    currency_id = fields.Many2one("res.currency")
-    campaign_ids = fields.One2many("utm.campaign", "campaign_group_id")
-    total_budget = fields.Float(
-        help="""
-        Maximum budget that the campaign can spend over its entire duration
-    """
-    )

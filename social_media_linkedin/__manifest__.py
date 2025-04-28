@@ -17,6 +17,8 @@
         "views/res_config_settings_views.xml",
         "views/social_network_post_account_views.xml",
         "views/social_media_linkedin_menus.xml",
+        "views/utm_group_campaign_views.xml",
+        "views/utm_campaign_views.xml",
     ],
     "assets": {
         "web.assets_backend": [

@@ -29,7 +29,9 @@ class SocialNetworkMedia(models.Model):
     def _compute_csrf_state_token(self):
         for media in self:
             media.csrf_state_token = hmac(
-                self.env(su=True), "social_linkedin-account-csrf-token", media.id
+                self.env(su=True),
+                f"social_media_{media.media_type}-account-csrf-token",
+                media.id,
             )
 
     def _action_add_account(self):
