@@ -8,6 +8,7 @@ from odoo.addons.base.tests.common import BaseCommon
 
 PATCH_SOCIAL_BASE_UTILS = "odoo.addons.social_media_base.social_utils.{}"
 PATCH_SOCIAL_BAS_MODELS = "odoo.addons.social_media_base.models"
+PATCH_SOCIAL_WIZARDS = "odoo.addons.social_media_base.wizards"
 PATCH_SOCIAL_BASE_MIXIN = "{}.social_media_base_mixin.SocialMediaBaseMixin.{}".format(
     PATCH_SOCIAL_BAS_MODELS, "{}"
 )
@@ -18,6 +19,9 @@ PATCH_POST_ACCOUNT = "{}.social_post_account.SocialPostAccount.{}".format(
 PATCH_MEDIA = "{}.social_media.SocialMedia.{}".format(PATCH_SOCIAL_BAS_MODELS, "{}")
 PATCH_ACCOUNT = "{}.social_account.SocialAccount.{}".format(
     PATCH_SOCIAL_BAS_MODELS, "{}"
+)
+PATCH_WIZARD_ACCOUNT = "{}.wizard_social_account.WizardSocialAccount.{}".format(
+    PATCH_SOCIAL_WIZARDS, "{}"
 )
 
 

@@ -15,6 +15,7 @@ from odoo.addons.social_media_base.social_utils import (
 from odoo.addons.social_media_base.tests.test_social_common import (
     PATCH_ACCOUNT,
     PATCH_SOCIAL_BASE_MIXIN,
+    PATCH_WIZARD_ACCOUNT,
 )
 from odoo.addons.social_media_linkedin.models.social_account import (
     SocialAccount,
@@ -635,30 +636,20 @@ class TestSocialLinkedin(LinkedinMockMixin, TestSocialCommonLinkedin):
         self.assertIsNone(result[0]["logo"])
 
     def test_get_url_redirect(self):
-        result = self.wizard_account_id._get_url_redirect()
-        self.assertEqual(result, self.url_callback)
-        with patch.object(type(self.WizardAccount), "_get_url_redirect") as url:
+        with patch(
+            "odoo.models.BaseModel.get_base_url",
+            autospec=True,
+            return_value=self.url_callback,
+        ) as base_url:
+            result = self.wizard_account_id._get_url_redirect()
+            self.assertEqual(result, self.url_callback)
+            base_url.assert_called_once()
+
+        with patch(
+            PATCH_WIZARD_ACCOUNT.format("_get_url_redirect"), autospec=True
+        ) as redirect_super:
             self.WizardAccount._get_url_redirect()
-            url.assert_called_once()
-
-        media_fake = self.SocialMedia.create({"name": "fake_media"})
-
-        wizard_media_fake = self.WizardAccount.create(
-            {
-                "media_id": media_fake.id,
-            }
-        )
-
-        parent_cls = self._get_parent_class_defining(
-            wizard_media_fake, "_get_url_redirect"
-        )
-        fake_url = "https://test.example/redirect"
-        with patch.object(
-            parent_cls, "_get_url_redirect", autospec=True, return_value=fake_url
-        ) as mock_url_redirect:
-            result_url = wizard_media_fake._get_url_redirect()
-            mock_url_redirect.assert_called_once()
-            self.assertEqual(result_url, fake_url)
+            redirect_super.assert_called_once()
 
     def test_generate_code(self):
         result = self.wizard_account_id._generate_code()
