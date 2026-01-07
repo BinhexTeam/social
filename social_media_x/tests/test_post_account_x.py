@@ -4,6 +4,8 @@
 from datetime import datetime
 from unittest.mock import MagicMock, patch
 
+from odoo.exceptions import ValidationError
+
 from odoo.addons.social_media_base.tests.test_social_common import PATCH_POST_ACCOUNT
 from odoo.addons.social_media_x.tests.test_common_x import (
     PATCH_ACCOUNT_X,
@@ -140,6 +142,33 @@ class TestSocialPostAccountX(TestSocialCommonX):
             self.SocialPostAccountX._delete_post_account()
         many_requests.assert_called_once()
 
+    def test_get_post_x(self):
+        fake_response = MagicMock()
+        fake_response.errors = False
+        fake_client = MagicMock()
+        fake_client.get_tweet.return_value = fake_response
+        mock_get_client_api, mock_valid_time_request = self.get_patch_exceptions(
+            fake_client
+        )
+        with mock_get_client_api, mock_valid_time_request:
+            res = self.SocialPostAccountX.get_post_x()
+            self.assertTrue(res)
+
+    def test_get_post_x_errors(self):
+        res = self.SocialPostAccount.get_post_x()
+        self.assertFalse(res)
+
+        fake_response = MagicMock()
+        fake_response.errors = self.test_response_errors
+        fake_client = MagicMock()
+        fake_client.get_tweet.return_value = fake_response
+        mock_get_client_api, mock_valid_time_request = self.get_patch_exceptions(
+            fake_client
+        )
+        with mock_get_client_api, mock_valid_time_request:
+            with self.assertRaises(ValidationError):
+                self.SocialPostAccountX.get_post_x()
+
     def test_get_post_x_exception(self):
         fake_client = MagicMock()
         fake_client.get_tweet.side_effect = Exception("Error Get Comment")
@@ -210,18 +239,6 @@ class TestSocialPostAccountX(TestSocialCommonX):
             )
             self.assertEqual(len(attachments), 0)
             mock_get_medias.assert_called_once()
-
-    def test_get_post_x(self):
-        fake_response = MagicMock()
-        fake_response.errors = False
-        fake_client = MagicMock()
-        fake_client.get_tweet.return_value = fake_response
-        mock_get_client_api, mock_valid_time_request = self.get_patch_exceptions(
-            fake_client
-        )
-        with mock_get_client_api, mock_valid_time_request:
-            res = self.SocialPostAccountX.get_post_x()
-            self.assertTrue(res)
 
     def test_get_comments(self):
         now = datetime.now()
