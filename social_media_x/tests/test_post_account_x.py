@@ -26,6 +26,18 @@ class TestSocialPostAccountX(TestSocialCommonX):
     def create_test_comment(self):
         return self.SocialPostAccountX.create_x_comment(self.post_data)
 
+    def test_create_comment(self):
+        with patch.object(
+            type(self.SocialPostAccountX), "create_x_comment"
+        ) as mock_create_comment:
+            self.SocialPostAccountX.create_comment(self.post_data)
+            mock_create_comment.assert_called_once()
+
+    def test_create_comment_super(self):
+        with patch(PATCH_POST_ACCOUNT.format("create_comment")) as mock_create_comment:
+            self.SocialPostAccount.create_comment(self.post_data)
+            mock_create_comment.assert_called_once()
+
     def test_create_x_comment(self):
         mock_client = MagicMock()
         fake_client = MagicMock()
@@ -47,6 +59,18 @@ class TestSocialPostAccountX(TestSocialCommonX):
             mock_medias_for_tweet.assert_called_once()
             mock_client_api.assert_called_once()
         self.assertTrue(res["success"])
+
+        with (
+            mock_valid_time_request,
+            mock_get_client_api as mock_client_api,
+        ):
+            res_without_attach = self.SocialPostAccountX.create_x_comment(
+                {
+                    "body": self.test_message,
+                }
+            )
+            mock_client_api.assert_called_once()
+        self.assertTrue(res_without_attach["success"])
 
     def test_create_x_comment_exception(self):
         fake_client = MagicMock()
@@ -335,15 +359,3 @@ class TestSocialPostAccountX(TestSocialCommonX):
             self.assertEqual(self.SocialPostAccountX.state, "failed")
             mock_filter_by_media_types.assert_called_once()
             mock_create_tweet.assert_called_once()
-
-    def test_create_comment(self):
-        with patch.object(
-            type(self.SocialPostAccountX), "create_x_comment"
-        ) as mock_create_comment:
-            self.SocialPostAccountX.create_comment(self.post_data)
-            mock_create_comment.assert_called_once()
-
-    def test_create_comment_super(self):
-        with patch(PATCH_POST_ACCOUNT.format("create_comment")) as mock_create_comment:
-            self.SocialPostAccount.create_comment(self.post_data)
-            mock_create_comment.assert_called_once()
