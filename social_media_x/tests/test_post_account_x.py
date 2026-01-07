@@ -4,6 +4,8 @@
 from datetime import datetime
 from unittest.mock import MagicMock, patch
 
+from tweepy.errors import TooManyRequests
+
 from odoo.exceptions import ValidationError
 
 from odoo.addons.social_media_x.tests.test_common_x import (
@@ -222,6 +224,38 @@ class TestSocialPostAccountX(TestSocialCommonX):
             self.assertEqual(len(comments["data"]), 1)
             self.assertEqual(comments["data"][0]["id"], "comment_id1")
             self.assertEqual(comments["data"][0]["text"], "Comment 1")
+
+    def test_get_comments_exception(self):
+        fake_client = MagicMock()
+        fake_client.search_recent_tweets.return_value = [233]
+        with patch.object(
+            type(self.SocialPostAccountX),
+            "get_comments",
+            autospec=True,
+            return_value=True,
+        ) as mock_get_comments:
+            mock_get_comments.side_effect = Exception("Error Comments")
+            with self.assertRaises(Exception) as ctx:
+                self.SocialPostAccountX.get_comments()
+            self.assertEqual("Error Comments", str(ctx.exception))
+
+    def test_get_comments_exception_manyrequests(self):
+        fake_resp = MagicMock()
+        fake_resp.headers = {
+            "x-rate-limit-limit": "1",
+            "x-rate-limit-remaining": "0",
+            "x-rate-limit-reset": "9999999999",
+        }
+
+        with patch.object(
+            type(self.SocialPostAccountX),
+            "get_comments",
+            autospec=True,
+            return_value=True,
+        ) as mock_get_comments:
+            mock_get_comments.side_effect = TooManyRequests(response=fake_resp)
+            with self.assertRaises(TooManyRequests):
+                self.SocialPostAccountX.get_comments()
 
     def test_action_post(self):
         self.SocialPostAccountX.write({"state": "ready"})
