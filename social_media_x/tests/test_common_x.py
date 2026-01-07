@@ -1,6 +1,10 @@
 # Copyright 2025 Binhex <https://www.binhex.cloud>
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
 
+from unittest.mock import MagicMock, patch
+
+from tweepy.errors import TooManyRequests
+
 from odoo.fields import Command
 
 from odoo.addons.mail.tests.common import mail_new_test_user
@@ -96,3 +100,38 @@ class TestSocialCommonX(TestSocialMediaBaseCommon):
             name="Admin Media X Admin",
             signature="--\nMEDIAX",
         )
+
+    def get_exception_manyrequests(self):
+        fake_resp = MagicMock()
+        fake_resp.headers = {
+            "x-rate-limit-limit": "1",
+            "x-rate-limit-remaining": "0",
+            "x-rate-limit-reset": "9999999999",
+        }
+        return TooManyRequests(response=fake_resp)
+
+    def get_patch_exceptions(self, fake_client, many_requests=False):
+        result_patch = [
+            patch.object(
+                type(self.SocialPostAccountX.account_id),
+                "get_client_api",
+                autospec=True,
+                return_value=fake_client,
+            ),
+            patch.object(
+                type(self.SocialPostAccountX.account_id),
+                "_valid_time_request",
+                autospec=True,
+                return_value=True,
+            ),
+        ]
+        if many_requests:
+            result_patch.append(
+                patch.object(
+                    type(self.SocialPostAccountX.account_id),
+                    "_get_message_many_requests",
+                    autospec=True,
+                    return_value=False,
+                )
+            )
+        return tuple(result_patch)
