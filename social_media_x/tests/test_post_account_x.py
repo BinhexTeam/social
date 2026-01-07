@@ -222,3 +222,44 @@ class TestSocialPostAccountX(TestSocialCommonX):
             self.assertEqual(len(comments["data"]), 1)
             self.assertEqual(comments["data"][0]["id"], "comment_id1")
             self.assertEqual(comments["data"][0]["text"], "Comment 1")
+
+    def test_action_post(self):
+        self.SocialPostAccountX.write({"state": "ready"})
+        with patch.object(
+            type(self.SocialPostX),
+            "filter_by_media_types",
+            autospec=True,
+            return_value=self.SocialPostAccountX,
+        ) as mock_filter_by_media_types, patch.object(
+            type(self.SocialPostAccountX.account_id),
+            "create_tweet",
+            autospec=True,
+            return_value="122809890045",
+        ) as mock_create_tweet:
+            self.SocialPostAccountX._action_post(self.SocialPostX)
+            self.assertEqual(self.SocialPostAccountX.x_post_account_id, "122809890045")
+            self.assertEqual(self.SocialPostAccountX.state, "posted")
+            self.assertIn(
+                self.SocialPostAccountX.account_id.username,
+                self.SocialPostAccountX.post_account_url,
+            )
+            mock_filter_by_media_types.assert_called_once()
+            mock_create_tweet.assert_called_once()
+
+    def test_action_post_failed(self):
+        self.SocialPostAccountX.write({"state": "ready"})
+        with patch.object(
+            type(self.SocialPostX),
+            "filter_by_media_types",
+            autospec=True,
+            return_value=self.SocialPostAccountX,
+        ) as mock_filter_by_media_types, patch.object(
+            type(self.SocialPostAccountX.account_id),
+            "create_tweet",
+            autospec=True,
+            return_value=False,
+        ) as mock_create_tweet:
+            self.SocialPostAccountX._action_post(self.SocialPostX)
+            self.assertEqual(self.SocialPostAccountX.state, "failed")
+            mock_filter_by_media_types.assert_called_once()
+            mock_create_tweet.assert_called_once()
