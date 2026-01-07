@@ -4,6 +4,7 @@
 from datetime import datetime
 from unittest.mock import MagicMock, patch
 
+from odoo.addons.social_media_base.tests.test_social_common import PATCH_POST_ACCOUNT
 from odoo.addons.social_media_x.tests.test_common_x import (
     PATCH_ACCOUNT_X,
     TestSocialCommonX,
@@ -15,13 +16,13 @@ class TestSocialPostAccountX(TestSocialCommonX):
     def setUpClass(cls):
         super().setUpClass()
         cls.test_response_errors = ["Error 1", "Error 2"]
-
-    def create_test_comment(self):
-        post_data = {
+        cls.post_data = {
             "body": "Test Comment",
             "attachment_ids": [1],
         }
-        return self.SocialPostAccountX.create_x_comment(post_data)
+
+    def create_test_comment(self):
+        return self.SocialPostAccountX.create_x_comment(self.post_data)
 
     def test_create_x_comment(self):
         mock_client = MagicMock()
@@ -73,14 +74,6 @@ class TestSocialPostAccountX(TestSocialCommonX):
         ):
             self.create_test_comment()
         many_requests.assert_called_once()
-
-    def test_create_comment(self):
-        mock_client = MagicMock()
-        with patch.object(
-            type(self.SocialPostAccountX), "create_x_comment", return_value=mock_client
-        ) as mock_create_comment:
-            self.create_test_comment()
-            mock_create_comment.assert_called_once()
 
     def test_compute_post_statistics_x(self):
         post_account_values = {
@@ -325,3 +318,15 @@ class TestSocialPostAccountX(TestSocialCommonX):
             self.assertEqual(self.SocialPostAccountX.state, "failed")
             mock_filter_by_media_types.assert_called_once()
             mock_create_tweet.assert_called_once()
+
+    def test_create_comment(self):
+        with patch.object(
+            type(self.SocialPostAccountX), "create_x_comment"
+        ) as mock_create_comment:
+            self.SocialPostAccountX.create_comment(self.post_data)
+            mock_create_comment.assert_called_once()
+
+    def test_create_comment_super(self):
+        with patch(PATCH_POST_ACCOUNT.format("create_comment")) as mock_create_comment:
+            self.SocialPostAccount.create_comment(self.post_data)
+            mock_create_comment.assert_called_once()
