@@ -10,6 +10,9 @@ from odoo.addons.social_media_base.tests.test_social_common import (
     TestSocialMediaBaseCommon,
 )
 
+PATCH_WIZARD_LINKEDIN = "odoo.addons.social_media_linkedin.wizards.{}"
+PATCH_WIZARD_ACCOUNT_LINKEDIN = PATCH_WIZARD_LINKEDIN.format("wizard_social_account.{}")
+
 PATCH_ACCOUNT_LINKEDIN = (
     "odoo.addons.social_media_linkedin.models.social_account.SocialAccount.{}"
 )

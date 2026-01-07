@@ -22,6 +22,7 @@ from odoo.addons.social_media_linkedin.models.social_account import (
 )
 from odoo.addons.social_media_linkedin.tests.test_common_linkedin import (
     PATCH_ACCOUNT_LINKEDIN,
+    PATCH_WIZARD_ACCOUNT_LINKEDIN,
     TestSocialCommonLinkedin,
 )
 
@@ -745,6 +746,26 @@ class TestSocialLinkedin(LinkedinMockMixin, TestSocialCommonLinkedin):
         self.assertEqual(self.SocialAccountLinkedin.name, "Localized X")
         self.assertEqual(self.SocialAccountLinkedin.username, "Vanity X")
         mock_linkedin.assert_called_once()
+
+    def test_get_csrf_state_token(self):
+        fake_code_hmac = "fake-hmac-code"
+        with patch.object(
+            type(self.wizard_account_id), "_generate_code", autospec=True
+        ) as mock_fake_code, patch(
+            PATCH_WIZARD_ACCOUNT_LINKEDIN.format("hmac"),
+            autospec=True,
+            return_value=fake_code_hmac,
+        ) as mock_hmac:
+            result = self.wizard_account_id._get_csrf_state_token()
+            self.assertEqual(result, fake_code_hmac)
+            mock_hmac.assert_called_once()
+            mock_fake_code.assert_called_once()
+
+        with patch(
+            PATCH_WIZARD_ACCOUNT.format("_get_csrf_state_token"), autospec=True
+        ) as mock_hmac_super:
+            self.WizardAccount._get_csrf_state_token()
+            mock_hmac_super.assert_called_once()
 
     def test_compute_csrf_state_token(self):
         expected_token = "fake-csrf-token"
