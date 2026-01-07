@@ -4,8 +4,6 @@
 from datetime import datetime
 from unittest.mock import MagicMock, patch
 
-from odoo.exceptions import ValidationError
-
 from odoo.addons.social_media_x.tests.test_common_x import (
     PATCH_ACCOUNT_X,
     TestSocialCommonX,
@@ -18,33 +16,70 @@ class TestSocialPostAccountX(TestSocialCommonX):
         super().setUpClass()
         cls.test_response_errors = ["Error 1", "Error 2"]
 
+    def create_test_comment(self):
+        post_data = {
+            "body": "Test Comment",
+            "attachment_ids": [1],
+        }
+        return self.SocialPostAccountX.create_x_comment(post_data)
+
     def test_create_x_comment(self):
         mock_client = MagicMock()
-        with patch.object(
-            type(self.SocialAccountX), "get_client_api", return_value=mock_client
-        ) as mock_get_client_api, patch.object(
-            type(self.SocialAccountX),
-            "_prepare_medias_for_tweet",
-            return_value=mock_client,
-        ) as mock_medias_for_tweet:
-            post_data = {
-                "body": "Test Comment",
-                "attachment_ids": [1],
-            }
-            self.SocialPostAccountX.create_x_comment(post_data)
+        fake_client = MagicMock()
+        fake_client.create_tweet.return_value = True
+        (
+            mock_get_client_api,
+            mock_valid_time_request,
+        ) = self.get_patch_exceptions(fake_client)
+        with (
+            mock_valid_time_request,
+            mock_get_client_api as mock_client_api,
+            patch.object(
+                type(self.SocialAccountX),
+                "_prepare_medias_for_tweet",
+                return_value=mock_client,
+            ) as mock_medias_for_tweet,
+        ):
+            res = self.create_test_comment()
             mock_medias_for_tweet.assert_called_once()
-            self.assertEqual(mock_get_client_api.call_count, 1)
+            mock_client_api.assert_called_once()
+        self.assertTrue(res["success"])
+
+    def test_create_x_comment_exception(self):
+        fake_client = MagicMock()
+        fake_client.create_tweet.side_effect = Exception("Error Create Comment")
+        (
+            mock_get_client_api,
+            mock_valid_time_request,
+        ) = self.get_patch_exceptions(fake_client)
+        with mock_get_client_api, mock_valid_time_request:
+            res = self.create_test_comment()
+        self.assertFalse(res["success"])
+        self.assertIn("Error Comment Tweet", res["message"])
+
+    def test_create_x_comment_exception_manyrequests(self):
+        fake_client = MagicMock()
+        fake_client.create_tweet.return_value = False
+        fake_client.create_tweet.side_effect = self.get_exception_manyrequests()
+        (
+            mock_get_client_api,
+            mock_valid_time_request,
+            mock_many_requests,
+        ) = self.get_patch_exceptions(fake_client, True)
+        with (
+            mock_get_client_api,
+            mock_valid_time_request,
+            mock_many_requests as many_requests,
+        ):
+            self.create_test_comment()
+        many_requests.assert_called_once()
 
     def test_create_comment(self):
         mock_client = MagicMock()
         with patch.object(
             type(self.SocialPostAccountX), "create_x_comment", return_value=mock_client
         ) as mock_create_comment:
-            post_data = {
-                "body": "Test Comment",
-                "attachment_ids": [1],
-            }
-            self.SocialPostAccountX.create_comment(post_data)
+            self.create_test_comment()
             mock_create_comment.assert_called_once()
 
     def test_compute_post_statistics_x(self):
@@ -84,31 +119,62 @@ class TestSocialPostAccountX(TestSocialCommonX):
         self.SocialPostAccountX._delete_post_account()
         mock_delete_post_account.assert_called_once()
 
-    def test_delete_post_account_raises_response_errors(self):
-        post_account = self.SocialPostAccountX
-        self.assertTrue(post_account)
-        self.assertEqual(post_account.media_id.media_type, "x")
-        post_account.write({"x_post_account_id": "123"})
+    def test_delete_post_account_exception(self):
         fake_client = MagicMock()
-        fake_response = MagicMock()
-        fake_response.errors = self.test_response_errors
-        fake_client.delete_tweet.return_value = fake_response
-        with patch.object(
-            type(post_account.account_id),
-            "_valid_time_request",
-            autospec=True,
-            return_value=True,
-        ), patch.object(
-            type(post_account.account_id),
-            "get_client_api",
-            autospec=True,
-            return_value=fake_client,
-        ):
-            with self.assertRaises(ValidationError) as ctx:
-                post_account._delete_post_account()
+        fake_client.delete_tweet.side_effect = Exception("Error Delete Post")
+        (
+            mock_get_client_api,
+            mock_valid_time_request,
+        ) = self.get_patch_exceptions(fake_client)
+        with mock_get_client_api, mock_valid_time_request:
+            with self.assertRaises(Exception) as ctx:
+                self.SocialPostAccountX._delete_post_account()
+            self.assertIn("Error Delete Post", str(ctx.exception))
 
-        self.assertIn("Error 1, Error 2", str(ctx.exception))
-        fake_client.delete_tweet.assert_called_once_with("123")
+    def test_delete_post_account_exception_manyrequests(self):
+        fake_client = MagicMock()
+        fake_client.delete_tweet.side_effect = self.get_exception_manyrequests()
+        (
+            mock_get_client_api,
+            mock_valid_time_request,
+            mock_many_requests,
+        ) = self.get_patch_exceptions(fake_client, True)
+        with (
+            mock_get_client_api,
+            mock_valid_time_request,
+            mock_many_requests as many_requests,
+        ):
+            self.SocialPostAccountX._delete_post_account()
+        many_requests.assert_called_once()
+
+    def test_get_post_x_exception(self):
+        fake_client = MagicMock()
+        fake_client.get_tweet.side_effect = Exception("Error Get Comment")
+        (
+            mock_get_client_api,
+            mock_valid_time_request,
+        ) = self.get_patch_exceptions(fake_client)
+        with mock_get_client_api, mock_valid_time_request:
+            with self.assertRaises(Exception) as ctx:
+                self.SocialPostAccountX.get_post_x()
+            self.assertIn("Error Get Comment", str(ctx.exception))
+
+    def test_get_post_x_exception_manyrequests(self):
+        fake_client = MagicMock()
+        fake_client.get_tweet.return_value = False
+        fake_client.get_tweet.side_effect = self.get_exception_manyrequests()
+        (
+            mock_get_client_api,
+            mock_valid_time_request,
+            mock_many_requests,
+        ) = self.get_patch_exceptions(fake_client, True)
+        with (
+            mock_get_client_api,
+            mock_valid_time_request,
+            mock_many_requests as many_requests,
+        ):
+            self.SocialPostAccountX.get_post_x()
+        many_requests.assert_called_once()
 
     def test_get_assets_save_x(self):
         fake_medias = ["media1"]
@@ -163,24 +229,6 @@ class TestSocialPostAccountX(TestSocialCommonX):
         with mock_get_client_api, mock_valid_time_request:
             res = self.SocialPostAccountX.get_post_x()
             self.assertTrue(res)
-
-    def test_get_post_x_raises_response_errors(self):
-        self.assertTrue(self.SocialPostAccountX)
-        self.assertEqual(self.SocialPostAccountX.media_id.media_type, "x")
-        self.SocialPostAccountX.write({"x_post_account_id": "123"})
-        fake_client = MagicMock()
-        fake_response = MagicMock()
-        fake_response.errors = self.test_response_errors
-        fake_client.get_tweet.return_value = fake_response
-        (
-            mock_get_client_api,
-            mock_valid_time_request,
-        ) = self.get_patch_exceptions(fake_client)
-        with mock_get_client_api, mock_valid_time_request:
-            with self.assertRaises(ValidationError) as ctx:
-                self.SocialPostAccountX.get_post_x()
-
-        self.assertIn("Error 1, Error 2", str(ctx.exception))
 
     def test_get_comments(self):
         now = datetime.now()

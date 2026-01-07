@@ -371,7 +371,7 @@ class SocialAccount(models.Model):
         if image_datas:
             image_ids = [image_datas.split(",")[-1]]
         api = self.get_client_api(client_api=False)
-        for media_post in list(itertools.chain(image_ids, video_ids)):
+        for media_post in list(itertools.chain(image_ids or [], video_ids or [])):
             image_file = io.BytesIO(
                 base64.b64decode(media_post.datas)
                 if not isinstance(media_post, str)
