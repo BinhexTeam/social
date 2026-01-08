@@ -11,10 +11,7 @@ from odoo.addons.social_media_base.tests.test_social_common import (
     TestSocialMediaBaseCommon,
 )
 
-from .test_social_common import (
-    PATCH_POST,
-    PATCH_POST_ACCOUNT,
-)
+from .test_social_common import PATCH_POST
 
 
 class TestSocialPostBase(TestSocialMediaBaseCommon):
@@ -36,15 +33,34 @@ class TestSocialPostBase(TestSocialMediaBaseCommon):
         self.social_post_id._run_send_post()
         mock_action_create_post_account.assert_called_once()
 
-    @patch(PATCH_POST.format("_action_create_post_account"))
-    def test_action_create_post_account(self, mock_action_create_post_account):
-        self.social_post_id.action_create_post_account()
-        mock_action_create_post_account.assert_called_once()
-
-    @patch(PATCH_POST_ACCOUNT.format("_action_post"))
-    def test__action_create_post_account(self, mock_action_post):
-        self.social_post_id._action_create_post_account()
-        mock_action_post.assert_called_once()
+    def test_action_create_post_account(self):
+        fake_post_account = [
+            Command.create(
+                {
+                    "post_id": self.social_post_id.id,
+                    "account_id": self.social_post_account_id.account_id.id,
+                    "state": "ready",
+                    "message": self.test_message,
+                }
+            )
+        ]
+        with patch.object(
+            type(self.social_post_id),
+            "_prepare_post_account_values",
+            autospec=True,
+            return_value=fake_post_account,
+        ), patch.object(
+            type(self.social_post_account_id),
+            "_action_post",
+            autospec=True,
+        ) as mock_action_post:
+            self.social_post_id._action_create_post_account()
+            mock_action_post.assert_called_once_with(
+                self.SocialPostAccount,
+                post_id=self.social_post_id,
+            )
+            self.assertEqual(self.social_post_id.state, "publishing")
+            self.assertEqual(len(self.social_post_id.post_account_ids), 2)
 
     def test_compute_display_name(self):
         self.social_post_id._compute_display_name()

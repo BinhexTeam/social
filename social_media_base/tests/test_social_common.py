@@ -50,7 +50,6 @@ class TestSocialMediaBaseCommon(BaseCommon):
             {
                 "name": "Linkedin",
                 "media_id": cls.social_media_id.id,
-                "media_type": cls.social_media_id.id,
             }
         )
         cls.social_post_id = cls.SocialPost.create(
