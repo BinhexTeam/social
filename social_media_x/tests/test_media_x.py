@@ -63,5 +63,5 @@ class TestSocialMediaX(TestSocialCommonX):
         with patch(
             PATCH_MEDIA.format("open_action_account")
         ) as mock__open_action_account:
-            self.media_x_id.open_action_account()
+            self.SocialMedia.open_action_account()
             mock__open_action_account.assert_called_once()
