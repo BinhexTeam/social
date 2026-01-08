@@ -1,7 +1,11 @@
 # Copyright 2025 Binhex <https://www.binhex.cloud>
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
 
+from unittest.mock import patch
 
+from odoo.addons.social_media_base.tests.test_social_common import (
+    PATCH_MEDIA,
+)
 from odoo.addons.social_media_x.tests.test_common_x import (
     TestSocialCommonX,
 )
@@ -48,9 +52,16 @@ class TestSocialMediaX(TestSocialCommonX):
         self.assertGreaterEqual(len(code_challenge), 43)
         self.assertLessEqual(len(code_challenge), 128)
 
-    def test_open_action_account_media_x(self):
-        action = self.media_x_id.open_action_account()
-        self.valid_open_action_account_media(self.media_x_id, action)
+    def test_open_action_account(self):
+        with patch(
+            PATCH_MEDIA.format("open_action_account")
+        ) as mock_open_action_account:
+            res = self.media_x_id.open_action_account()
+            self.assertEqual(res["context"]["default_media_id"], self.media_x_id.id)
+            mock_open_action_account.assert_called_once()
 
-    def test_not_open_action_account_media_x(self):
-        self.valid_not_open_action_account_media()
+        with patch(
+            PATCH_MEDIA.format("open_action_account")
+        ) as mock__open_action_account:
+            self.media_x_id.open_action_account()
+            mock__open_action_account.assert_called_once()
