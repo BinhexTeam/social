@@ -8,6 +8,8 @@ from unittest.mock import MagicMock, Mock, patch
 from odoo import Command
 from odoo.exceptions import ValidationError
 
+from odoo.addons.social_media_base.tests.test_social_common import PATCH_WIZARD_ACCOUNT
+
 from .test_common_x import (
     PATCH_ACCOUNT_X,
     PATCH_REQUEST_POST,
@@ -367,6 +369,21 @@ class TestSocialAccountX(TestSocialCommonX):
         mock_write.assert_not_called()
 
     def test_update_account(self):
+        with patch(
+            PATCH_WIZARD_ACCOUNT.format("_update_account")
+        ) as mock_updt_account_super:
+            self.WizardAccount._update_account()
+            mock_updt_account_super.assert_called_once()
+
+        with patch.object(
+            type(self.WizardAccountX.account_id), "_update_account_data"
+        ) as mock_update_account_data, patch(
+            PATCH_WIZARD_ACCOUNT.format("_update_account")
+        ) as mock_update_account_super:
+            self.WizardAccountX._update_account()
+            mock_update_account_data.assert_called_once()
+            mock_update_account_super.assert_called_once()
+
         fake_url = {
             "type": "ir.actions.act_url",
             "url": "https://example.com",
@@ -374,7 +391,7 @@ class TestSocialAccountX(TestSocialCommonX):
         }
         self.WizardAccountX.write({"update_keys": True})
         with patch.object(
-            type(self.WizardAccount), "_get_url_authorize", return_value=fake_url
+            type(self.WizardAccountX), "_get_url_authorize", return_value=fake_url
         ):
             result = self.WizardAccountX._update_account()
             self.assertEqual(result["type"], "ir.actions.act_url")
@@ -495,7 +512,6 @@ class TestSocialAccountX(TestSocialCommonX):
     def test_action_add_account(self):
         wizard = self.WizardAccountX
         wizard.media_type = "x"
-
         with patch(
             "odoo.addons.social_media_x.wizards.wizard_social_account."
             "WizardSocialAccount._get_url_authorize",
@@ -512,7 +528,6 @@ class TestSocialAccountX(TestSocialCommonX):
             mock_super.assert_called_once()
             mock_get_url.assert_called_once()
             self.assertEqual(result, {"type": "ir.actions.act_url"})
-
         with patch(
             "odoo.addons.social_media_base.wizards.wizard_social_account."
             "WizardSocialAccount._action_add_account",
