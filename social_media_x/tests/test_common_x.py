@@ -23,7 +23,7 @@ PATCH_MEDIA_X = PACTH_MEDIA_MODELS_X.format("social_media.SocialMedia.{}")
 PATCH_X_UTILS = "odoo.addons.social_media_x.social_x_utils.{}"
 PATCH_REQUEST_POST = PATCH_ACCOUNT_X.format("requests.post")
 
-PATCH_WIZARD_ACCOUNT = "{}.wizard_social_account.{}".format(
+PATCH_WIZARD_ACCOUNT_X = "{}.wizard_social_account.{}".format(
     PATCH_SOCIAL_X_WIZARDS, "{}"
 )
 

@@ -11,7 +11,7 @@ from odoo.exceptions import ValidationError
 from .test_common_x import (
     PATCH_ACCOUNT_X,
     PATCH_REQUEST_POST,
-    PATCH_WIZARD_ACCOUNT,
+    PATCH_WIZARD_ACCOUNT_X,
     TestSocialCommonX,
 )
 
@@ -294,7 +294,7 @@ class TestSocialAccountX(TestSocialCommonX):
         self.assertEqual(res["context"]["default_x_api_secret"], "DEF_TEST_SECRET")
 
     @patch(PATCH_REQUEST_POST)
-    @patch(PATCH_WIZARD_ACCOUNT.format("_get_oauth"))
+    @patch(PATCH_WIZARD_ACCOUNT_X.format("_get_oauth"))
     def test_success_returns_act_url_and_sets_token(self, mock_get_oauth, mock_post):
         mock_get_oauth.return_value = object()
         mock_post.return_value = Mock(text="oauth_token=AAA&oauth_token_secret=BBB")
@@ -315,9 +315,9 @@ class TestSocialAccountX(TestSocialCommonX):
         self.assertIn("oauth_token=AAA", res["url"])
         self.assertEqual(self.WizardAccountX.oauth_token, "AAA")
 
-    @patch(PATCH_WIZARD_ACCOUNT.format("_logger"))
+    @patch(PATCH_WIZARD_ACCOUNT_X.format("_logger"))
     @patch(PATCH_REQUEST_POST)
-    @patch(PATCH_WIZARD_ACCOUNT.format("_get_oauth"))
+    @patch(PATCH_WIZARD_ACCOUNT_X.format("_get_oauth"))
     def test_valueerror_returns_notification(
         self, mock_get_oauth, mock_post, mock_logger
     ):
@@ -491,3 +491,33 @@ class TestSocialAccountX(TestSocialCommonX):
             _, kwargs = mocked_notify.call_args
             self.assertEqual(kwargs["notif_type"], "social_list_info")
             self.assertIn("Get users tweets", kwargs["notif_message"])
+
+    def test_action_add_account(self):
+        wizard = self.WizardAccountX
+        wizard.media_type = "x"
+
+        with patch(
+            "odoo.addons.social_media_x.wizards.wizard_social_account."
+            "WizardSocialAccount._get_url_authorize",
+            autospec=True,
+            return_value={"type": "ir.actions.act_url"},
+        ) as mock_get_url, patch(
+            "odoo.addons.social_media_base.wizards.wizard_social_account."
+            "WizardSocialAccount._action_add_account",
+            autospec=True,
+            return_value={"super": True},
+        ) as mock_super:
+            result = wizard._action_add_account()
+
+            mock_super.assert_called_once()
+            mock_get_url.assert_called_once()
+            self.assertEqual(result, {"type": "ir.actions.act_url"})
+
+        with patch(
+            "odoo.addons.social_media_base.wizards.wizard_social_account."
+            "WizardSocialAccount._action_add_account",
+            autospec=True,
+            return_value={"super": True},
+        ) as mock_add_super:
+            self.WizardAccount._action_add_account()
+            mock_add_super.assert_called_once()
