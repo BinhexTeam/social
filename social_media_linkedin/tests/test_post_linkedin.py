@@ -560,3 +560,21 @@ class TestSocialPostLinkedin(TestSocialCommonLinkedin):
             mock_create_restclient_linkedin.assert_called_once()
             mock_get_posts.assert_called_once()
             mock_get_assets_save.assert_called_once()
+
+    def test_action_post_failed(self):
+        self.SocialPostAccountLinkedin.write({"state": "ready"})
+        with patch.object(
+            type(self.SocialPostLinkedin),
+            "filter_by_media_types",
+            autospec=True,
+            return_value=self.SocialPostAccountLinkedin,
+        ) as mock_filter_by_media_types, patch.object(
+            type(self.SocialPostAccountLinkedin.account_id),
+            "create_restclient_linkedin",
+            autospec=True,
+            return_value=False,
+        ) as mock_create_restclient_linkedin:
+            self.SocialPostAccountLinkedin._action_post(self.SocialPostLinkedin)
+            self.assertEqual(self.SocialPostAccountLinkedin.state, "failed")
+            mock_filter_by_media_types.assert_called_once()
+            mock_create_restclient_linkedin.assert_called_once()
