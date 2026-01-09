@@ -95,9 +95,7 @@ class SocialAccount(models.Model):
     def _compute_post_since_id(self):
         SocialPostAccount = self.env["social.post.account"]
         for account in self:
-            if not account.enable_since and account.last_post_id:
-                account.last_post_id = False
-            elif not account.enable_since:
+            if not account.enable_since:
                 continue
             domain = [("account_id", "=", account.id)]
             if account.last_post_id:
