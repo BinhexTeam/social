@@ -2,6 +2,7 @@
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
 
 import base64
+from datetime import datetime, timedelta
 from types import SimpleNamespace
 from unittest.mock import MagicMock, Mock, patch
 
@@ -215,7 +216,6 @@ class TestSocialAccountX(TestSocialCommonX):
                 self.counter = 0
 
             def media_upload(self, filename, file):
-                # Guardamos lo que recibe para asserts
                 data = file.read()
                 self.cap.append((filename, data))
                 self.counter += 1
@@ -367,6 +367,34 @@ class TestSocialAccountX(TestSocialCommonX):
         mock_ref.assert_not_called()
         mock_create.assert_not_called()
         mock_write.assert_not_called()
+
+    def test_update_account_data(self):
+        fake_client = MagicMock()
+        fake_client.get_me.return_value.data.profile_image_url = (
+            "https://example.com/img_url"
+        )
+        fake_response = MagicMock()
+        fake_response.status_code = 200
+        fake_response.content = b"fake-image-bytes"
+        with patch.object(
+            type(self.social_account_id),
+            "get_client_api",
+            autospec=True,
+            return_value=fake_client,
+        ) as mock_get_client_api, patch(
+            PATCH_ACCOUNT_X.format("requests.get"),
+            autospec=True,
+            return_value=fake_response,
+        ) as mock_get, patch.object(
+            type(self.social_account_id),
+            "write",
+            autospec=True,
+        ) as mock_write:
+            self.social_account_id._update_account_data()
+            mock_get_client_api.assert_called_once()
+            mock_get.assert_called_once()
+            mock_write.assert_called()
+            self.assertTrue(self.social_account_id.image_1920)
 
     def test_update_account(self):
         with patch(
@@ -536,3 +564,24 @@ class TestSocialAccountX(TestSocialCommonX):
         ) as mock_add_super:
             self.WizardAccount._action_add_account()
             mock_add_super.assert_called_once()
+
+    def test_valid_time_request(self):
+        date_end = datetime.now() + timedelta(hours=1)
+        self.social_account_id.rate_limit_endpoint = {
+            "get_tweets": {
+                "x-rate-limit-reset": int(date_end.timestamp()),
+            }
+        }
+        with patch.object(
+            type(self.social_account_id),
+            "_get_message_many_requests",
+            autospec=True,
+            return_value=False,
+        ) as mock_get_message_many_requests:
+            res = self.social_account_id._valid_time_request()
+            self.assertFalse(res)
+            mock_get_message_many_requests.assert_called_once()
+
+        self.social_account_id.rate_limit_endpoint = False
+        res = self.social_account_id._valid_time_request()
+        self.assertTrue(res)
