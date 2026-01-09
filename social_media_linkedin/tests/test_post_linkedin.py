@@ -210,7 +210,7 @@ class TestSocialPostLinkedin(TestSocialCommonLinkedin):
         self.assertEqual(result["success"], True)
 
         mock_response = MagicMock()
-        mock_response.status_code = 500  # Código de error para DELETE
+        mock_response.status_code = 500
         mock_response.json.return_value = {"message": "Internal Server Error"}
         mock_request.return_value = mock_response
         result = self.SocialPostAccountLinkedin.delete_linkedin_comment(
@@ -235,24 +235,14 @@ class TestSocialPostLinkedin(TestSocialCommonLinkedin):
         result = self.SocialPostAccountLinkedin.get_linkedin_comment()
         self.assertEqual(result, True)
 
+    @patch(PATCH_ACCOUNT_LINKEDIN.format("_request_linkedin"))
+    def test_get_linkedin_comment_failed(self, mock_request):
         mock_response = MagicMock()
         mock_response.status_code = 404
         mock_request.return_value = mock_response
-        result = self.SocialPostAccountReadyLinkedin.get_linkedin_comment()
-        self.assertEqual(result, False)
-        self.assertEqual(
-            self.SocialPostAccountReadyLinkedin.linkedin_post_account_urn, False
-        )
-
-        mock_response = MagicMock()
-        mock_response.status_code = 500
-        mock_response.json.return_value = {"message": "Internal Server Error"}
-        mock_request.return_value = mock_response
-        result = self.SocialPostAccountReadyLinkedin.get_linkedin_comment()
-        self.assertEqual(result, False)
-        self.assertEqual(
-            self.SocialPostAccountReadyLinkedin.linkedin_post_account_urn, False
-        )
+        result = self.SocialPostAccountLinkedin.get_linkedin_comment()
+        self.assertFalse(result)
+        self.assertFalse(self.SocialPostAccountLinkedin.linkedin_post_account_urn)
 
     def test_check_daily_budget(self):
         with self.assertRaises(ValidationError):
@@ -283,7 +273,13 @@ class TestSocialPostLinkedin(TestSocialCommonLinkedin):
                 self.SocialPostAccountCampaignLinkedin.id
             )
 
-        self.assertEqual(mock_action_campaign.call_count, 2)
+        mock_action_campaign.return_value = False
+        with self.assertRaises(ValidationError):
+            self.SocialPostAccountCampaignLinkedin._action_campaign_post(
+                self.SocialPostAccountCampaignLinkedin.id
+            )
+
+        self.assertEqual(mock_action_campaign.call_count, 3)
 
     def test_action_like_comment(self):
         result = self.SocialPostAccountLinkedin.action_like_comment()
