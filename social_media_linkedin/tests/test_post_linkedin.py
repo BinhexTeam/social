@@ -423,3 +423,100 @@ class TestSocialPostLinkedin(TestSocialCommonLinkedin):
             self.assertIn("Error creating group campaign in Linkedin", str(e.exception))
             mock_ad_accounts.assert_called_once()
             self.assertEqual(mock_request_linkedin.call_count, 2)
+
+    def test_not_create_campaign_group_error(self):
+        patch_advertising = self.get_patch_advertising(True)
+        patch_request_linkedin = self.get_patch_exceptions_linkedin(
+            side_effect=[MagicMock(status_code=400)]
+        )
+        with (
+            patch_advertising as mock_ad_accounts,
+            patch_request_linkedin as mock_request_linkedin,
+        ):
+            with self.assertRaises(ValidationError) as e:
+                self.SocialPostAccountCampaignLinkedin._action_campaign_group()
+            self.assertIn("Error creating group campaign in Linkedin", str(e.exception))
+            mock_ad_accounts.assert_called_once()
+            mock_request_linkedin.assert_called_once()
+
+    def get_patch_campaign_group(self, campaign_group=False):
+        return patch.object(
+            type(self.SocialPostAccountLinkedin),
+            "_action_campaign_group",
+            autospec=True,
+            return_value=campaign_group,
+        )
+
+    def test_not_action_campaign(self):
+        patch_campaign_group = self.get_patch_campaign_group()
+        with patch_campaign_group as mock_campaign_group:
+            self.SocialPostAccountLinkedin._action_campaign()
+            mock_campaign_group.assert_called_once()
+
+    def test_action_exist_campaign(self):
+        patch_campaign_group = self.get_patch_campaign_group(True)
+        fake_campaign = MagicMock()
+        fake_campaign.status_code = 200
+        patch_request_linkedin = self.get_patch_exceptions_linkedin(fake_campaign)
+        with (
+            patch_campaign_group as mock_campaign_group,
+            patch_request_linkedin as mock_request_linkedin,
+        ):
+            res = self.SocialPostAccountCampaignLinkedin._action_campaign()
+            self.assertEqual(
+                self.SocialPostCampaignLinkedin.campaign_id.linkedin_urn,
+                res,
+            )
+            mock_request_linkedin.assert_called_once()
+            mock_campaign_group.assert_called_once()
+
+    def test_create_new_campaign(self):
+        patch_campaign_group = self.get_patch_campaign_group(True)
+        patch_advertising = self.get_patch_advertising("urn:li:sponsoredAccount:999")
+        patch_request_linkedin = self.get_patch_exceptions_linkedin(
+            side_effect=[
+                MagicMock(status_code=404),
+                MagicMock(status_code=201, headers={"Location": "/adCampaignV2/456"}),
+            ]
+        )
+        fake_timestamps = (111111, 222222)
+        with (
+            patch(
+                PATCH_SOCIAL_BASE_UTILS.format("_generate_timestamps"),
+                autospec=True,
+                return_value=fake_timestamps,
+            ),
+            patch_request_linkedin as mock_request,
+            patch_campaign_group as mock_campaign_group,
+            patch_advertising as mock_ad_accounts,
+        ):
+            urn = self.SocialPostAccountCampaignLinkedin._action_campaign()
+            self.assertEqual(urn, "urn:li:sponsoredCampaign:456")
+            self.assertEqual(
+                self.SocialCampaignLinkedin.linkedin_urn,
+                "urn:li:sponsoredCampaign:456",
+            )
+            self.assertEqual(mock_request.call_count, 2)
+            mock_campaign_group.assert_called_once()
+            mock_ad_accounts.assert_called_once()
+
+    def test_create_new_campaign_error(self):
+        patch_campaign_group = self.get_patch_campaign_group(True)
+        patch_advertising = self.get_patch_advertising("urn:li:sponsoredAccount:999")
+        patch_request_linkedin = self.get_patch_exceptions_linkedin(
+            side_effect=[
+                MagicMock(status_code=404),
+                MagicMock(status_code=400, headers={"error": "Bad request"}),
+            ]
+        )
+        with (
+            patch_request_linkedin as mock_request,
+            patch_campaign_group as mock_campaign_group,
+            patch_advertising as mock_ad_accounts,
+        ):
+            with self.assertRaises(ValidationError) as ctx:
+                self.SocialPostAccountCampaignLinkedin._action_campaign()
+            self.assertIn("Error creating campaign in Linkedin", str(ctx.exception))
+            self.assertEqual(mock_request.call_count, 2)
+            mock_campaign_group.assert_called_once()
+            mock_ad_accounts.assert_called_once()

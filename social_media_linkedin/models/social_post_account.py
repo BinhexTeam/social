@@ -82,6 +82,7 @@ class SocialPostAccount(models.Model):
         group_campaign = False
         if advertising_account_id:
             campaign_id = self.post_id.campaign_id
+            message_error = "Error creating group campaign in Linkedin:"
             if campaign_id.campaign_group_id.linkedin_urn:
                 group_campaign = self.account_id._request_linkedin(
                     endpoint="/adCampaignGroupsV2/{}".format(
@@ -128,19 +129,19 @@ class SocialPostAccount(models.Model):
                     campaign_id.campaign_group_id.linkedin_urn = group_campaign
                 else:
                     raise ValidationError(
-                        _(
-                            "Error creating group campaign in Linkedin: {}".format(
-                                response.json()
-                            )
-                        )
+                        _("%(message_error)s %(error_response)s")
+                        % {
+                            "message_error": message_error,
+                            "error_response": response.json(),
+                        }
                     )
             else:
                 raise ValidationError(
-                    _(
-                        "Error creating group campaign in Linkedin: {}".format(
-                            group_campaign.json()
-                        )
-                    )
+                    _("%(message_error)s %(error_response)s")
+                    % {
+                        "message_error": message_error,
+                        "error_response": group_campaign.json(),
+                    }
                 )
         return group_campaign
 
@@ -148,11 +149,12 @@ class SocialPostAccount(models.Model):
         campaign_group_linkedin_urn = self._action_campaign_group()
         campaign = False
         if campaign_group_linkedin_urn:
-            post_campaign_id = self.post_id.campaign_id
-            if post_campaign_id.linkedin_urn:
+            message_error = "Error creating campaign in Linkedin:"
+            campaign_id = self.post_id.campaign_id
+            if campaign_id.linkedin_urn:
                 campaign = self.account_id._request_linkedin(
                     endpoint="/adCampaignsV2/{}".format(
-                        post_campaign_id.linkedin_urn.split(":")[-1]
+                        campaign_id.linkedin_urn.split(":")[-1]
                     ),
                     headers=self.account_id.media_id._get_linkedin_headers(
                         self.account_id.access_token
@@ -161,7 +163,7 @@ class SocialPostAccount(models.Model):
                     linkedin_v2=True,
                 )
             if campaign and campaign.status_code == 200:
-                return post_campaign_id.linkedin_urn
+                return campaign_id.linkedin_urn
             elif not campaign or campaign.status_code == 404:
                 start, end = _generate_timestamps()
                 response = self.account_id._request_linkedin(
@@ -173,7 +175,7 @@ class SocialPostAccount(models.Model):
                     json_data={
                         "account": self._linkedin_advertising_accounts(),
                         "campaignGroup": campaign_group_linkedin_urn,
-                        "name": f"{post_campaign_id.name}",
+                        "name": f"{campaign_id.name}",
                         "type": "SPONSORED_UPDATES",
                         "offsiteDeliveryEnabled": False,
                         "runSchedule": {
@@ -185,12 +187,12 @@ class SocialPostAccount(models.Model):
                             "language": self.env.user.lang.split("_")[0],
                         },
                         "unitCost": {
-                            "amount": f"{post_campaign_id.unit_cost}",
-                            "currencyCode": post_campaign_id.currency_id.name,
+                            "amount": f"{campaign_id.unit_cost}",
+                            "currencyCode": campaign_id.currency_id.name,
                         },
                         "dailyBudget": {
-                            "amount": f"{post_campaign_id.daily_budget}",
-                            "currencyCode": post_campaign_id.currency_id.name,
+                            "amount": f"{campaign_id.daily_budget}",
+                            "currencyCode": campaign_id.currency_id.name,
                         },
                         "status": "ACTIVE",
                     },
@@ -202,17 +204,22 @@ class SocialPostAccount(models.Model):
                     campaign = "urn:li:sponsoredCampaign:{}".format(
                         response.headers.get("Location").split("/")[-1]
                     )
-                    post_campaign_id.linkedin_urn = campaign
+                    campaign_id.linkedin_urn = campaign
                 else:
                     raise ValidationError(
-                        _(f"Error creating campaign in Linkedin: {response.json()}")
+                        _("%(message_error)s %(error_response)s")
+                        % {
+                            "message_error": message_error,
+                            "error_response": response.json(),
+                        }
                     )
             else:
                 raise ValidationError(
-                    _(
-                        f"""Error creating group campaign in Linkedin:
-                        {campaign.json()}"""
-                    )
+                    _("%(message_error)s %(error_response)s")
+                    % {
+                        "message_error": message_error,
+                        "error_response": campaign.json(),
+                    }
                 )
 
         return campaign
