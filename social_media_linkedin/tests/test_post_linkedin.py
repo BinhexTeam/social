@@ -520,3 +520,43 @@ class TestSocialPostLinkedin(TestSocialCommonLinkedin):
             self.assertEqual(mock_request.call_count, 2)
             mock_campaign_group.assert_called_once()
             mock_ad_accounts.assert_called_once()
+
+    def test_action_post(self):
+        self.SocialPostAccountLinkedin.write({"state": "ready"})
+        post_account_urn = "122809890045"
+        fake_response = MagicMock(return_value=[{"share_content": self.image_base64}])
+        with patch.object(
+            type(self.SocialPostLinkedin),
+            "filter_by_media_types",
+            autospec=True,
+            return_value=self.SocialPostAccountLinkedin,
+        ) as mock_filter_by_media_types, patch.object(
+            type(self.SocialPostAccountLinkedin.account_id),
+            "create_restclient_linkedin",
+            autospec=True,
+            return_value=post_account_urn,
+        ) as mock_create_restclient_linkedin, patch.object(
+            type(self.SocialPostAccountLinkedin.account_id),
+            "_get_posts",
+            autospec=True,
+            return_value=fake_response,
+        ) as mock_get_posts, patch.object(
+            type(self.SocialPostAccountLinkedin),
+            "_get_assets_save",
+            autospec=True,
+            return_value=[12],
+        ) as mock_get_assets_save:
+            self.SocialPostAccountLinkedin._action_post(self.SocialPostLinkedin)
+            self.assertEqual(
+                self.SocialPostAccountLinkedin.linkedin_post_account_urn,
+                post_account_urn,
+            )
+            self.assertEqual(self.SocialPostAccountLinkedin.state, "posted")
+            self.assertIn(
+                post_account_urn,
+                self.SocialPostAccountLinkedin.post_account_url,
+            )
+            mock_filter_by_media_types.assert_called_once()
+            mock_create_restclient_linkedin.assert_called_once()
+            mock_get_posts.assert_called_once()
+            mock_get_assets_save.assert_called_once()
