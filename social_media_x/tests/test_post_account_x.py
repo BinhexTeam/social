@@ -45,7 +45,7 @@ class TestSocialPostAccountX(TestSocialCommonX):
         (
             mock_get_client_api,
             mock_valid_time_request,
-        ) = self.get_patch_exceptions(fake_client)
+        ) = self.get_patch_exceptions_x(fake_client)
         with (
             mock_valid_time_request,
             mock_get_client_api as mock_client_api,
@@ -78,7 +78,7 @@ class TestSocialPostAccountX(TestSocialCommonX):
         (
             mock_get_client_api,
             mock_valid_time_request,
-        ) = self.get_patch_exceptions(fake_client)
+        ) = self.get_patch_exceptions_x(fake_client)
         with mock_get_client_api, mock_valid_time_request:
             res = self.create_test_comment()
         self.assertFalse(res["success"])
@@ -92,7 +92,7 @@ class TestSocialPostAccountX(TestSocialCommonX):
             mock_get_client_api,
             mock_valid_time_request,
             mock_many_requests,
-        ) = self.get_patch_exceptions(fake_client, True)
+        ) = self.get_patch_exceptions_x(fake_client, True)
         with (
             mock_get_client_api,
             mock_valid_time_request,
@@ -144,7 +144,7 @@ class TestSocialPostAccountX(TestSocialCommonX):
         (
             mock_get_client_api,
             mock_valid_time_request,
-        ) = self.get_patch_exceptions(fake_client)
+        ) = self.get_patch_exceptions_x(fake_client)
         with mock_get_client_api, mock_valid_time_request:
             with self.assertRaises(Exception) as ctx:
                 self.SocialPostAccountX._delete_post_account()
@@ -157,7 +157,7 @@ class TestSocialPostAccountX(TestSocialCommonX):
             mock_get_client_api,
             mock_valid_time_request,
             mock_many_requests,
-        ) = self.get_patch_exceptions(fake_client, True)
+        ) = self.get_patch_exceptions_x(fake_client, True)
         with (
             mock_get_client_api,
             mock_valid_time_request,
@@ -171,7 +171,7 @@ class TestSocialPostAccountX(TestSocialCommonX):
         fake_response.errors = False
         fake_client = MagicMock()
         fake_client.get_tweet.return_value = fake_response
-        mock_get_client_api, mock_valid_time_request = self.get_patch_exceptions(
+        mock_get_client_api, mock_valid_time_request = self.get_patch_exceptions_x(
             fake_client
         )
         with mock_get_client_api, mock_valid_time_request:
@@ -186,7 +186,7 @@ class TestSocialPostAccountX(TestSocialCommonX):
         fake_response.errors = self.test_response_errors
         fake_client = MagicMock()
         fake_client.get_tweet.return_value = fake_response
-        mock_get_client_api, mock_valid_time_request = self.get_patch_exceptions(
+        mock_get_client_api, mock_valid_time_request = self.get_patch_exceptions_x(
             fake_client
         )
         with mock_get_client_api, mock_valid_time_request:
@@ -199,7 +199,7 @@ class TestSocialPostAccountX(TestSocialCommonX):
         (
             mock_get_client_api,
             mock_valid_time_request,
-        ) = self.get_patch_exceptions(fake_client)
+        ) = self.get_patch_exceptions_x(fake_client)
         with mock_get_client_api, mock_valid_time_request:
             with self.assertRaises(Exception) as ctx:
                 self.SocialPostAccountX.get_post_x()
@@ -213,7 +213,7 @@ class TestSocialPostAccountX(TestSocialCommonX):
             mock_get_client_api,
             mock_valid_time_request,
             mock_many_requests,
-        ) = self.get_patch_exceptions(fake_client, True)
+        ) = self.get_patch_exceptions_x(fake_client, True)
         with (
             mock_get_client_api,
             mock_valid_time_request,
@@ -284,7 +284,7 @@ class TestSocialPostAccountX(TestSocialCommonX):
         (
             mock_get_client_api,
             mock_valid_time_request,
-        ) = self.get_patch_exceptions(fake_client)
+        ) = self.get_patch_exceptions_x(fake_client)
         with mock_get_client_api, mock_valid_time_request:
             comments = self.SocialPostAccountX.get_comments()
             self.assertEqual(len(comments["data"]), 1)
@@ -297,7 +297,7 @@ class TestSocialPostAccountX(TestSocialCommonX):
         (
             mock_get_client_api,
             mock_valid_time_request,
-        ) = self.get_patch_exceptions(fake_client)
+        ) = self.get_patch_exceptions_x(fake_client)
         with mock_get_client_api, mock_valid_time_request:
             res = self.SocialPostAccountX.get_comments()
         self.assertFalse(res["success"])
@@ -310,7 +310,7 @@ class TestSocialPostAccountX(TestSocialCommonX):
             mock_get_client_api,
             mock_valid_time_request,
             mock_many_requests,
-        ) = self.get_patch_exceptions(fake_client, True)
+        ) = self.get_patch_exceptions_x(fake_client, True)
         with (
             mock_get_client_api,
             mock_valid_time_request,

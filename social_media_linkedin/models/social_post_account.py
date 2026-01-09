@@ -81,11 +81,11 @@ class SocialPostAccount(models.Model):
         advertising_account_id = self._linkedin_advertising_accounts()
         group_campaign = False
         if advertising_account_id:
-            post_campaign_id = self.post_id.campaign_id
-            if post_campaign_id.campaign_group_id.linkedin_urn:
+            campaign_id = self.post_id.campaign_id
+            if campaign_id.campaign_group_id.linkedin_urn:
                 group_campaign = self.account_id._request_linkedin(
                     endpoint="/adCampaignGroupsV2/{}".format(
-                        post_campaign_id.campaign_group_id.linkedin_urn.split(":")[-1]
+                        campaign_id.campaign_group_id.linkedin_urn.split(":")[-1]
                     ),
                     headers=self.account_id.media_id._get_linkedin_headers(
                         self.account_id.access_token
@@ -95,7 +95,7 @@ class SocialPostAccount(models.Model):
                     linkedin_v2=True,
                 )
             if group_campaign and group_campaign.status_code == 200:
-                return post_campaign_id.campaign_group_id.linkedin_urn
+                return campaign_id.campaign_group_id.linkedin_urn
             elif not group_campaign or group_campaign.status_code == 404:
                 start, end = _generate_timestamps()
                 response = self.account_id._request_linkedin(
@@ -106,17 +106,15 @@ class SocialPostAccount(models.Model):
                     ),
                     json_data={
                         "account": advertising_account_id,
-                        "name": post_campaign_id.campaign_group_id.name,
+                        "name": campaign_id.campaign_group_id.name,
                         "runSchedule": {
                             "start": start,
                             "end": end,
                         },
                         "status": "ACTIVE",
                         "totalBudget": {
-                            "amount": "{}".format(
-                                post_campaign_id.campaign_group_id.total_budget
-                            ),
-                            "currencyCode": post_campaign_id.currency_id.name,
+                            "amount": f"{campaign_id.campaign_group_id.total_budget}",
+                            "currencyCode": campaign_id.currency_id.name,
                         },
                     },
                     token=True,
@@ -127,7 +125,7 @@ class SocialPostAccount(models.Model):
                     group_campaign = "urn:li:sponsoredCampaignGroup:{}".format(
                         response.headers.get("Location").split("/")[-1]
                     )
-                    post_campaign_id.campaign_group_id.linkedin_urn = group_campaign
+                    campaign_id.campaign_group_id.linkedin_urn = group_campaign
                 else:
                     raise ValidationError(
                         _(

@@ -110,7 +110,7 @@ class TestSocialCommonX(TestSocialMediaBaseCommon):
         }
         return TooManyRequests(response=fake_resp)
 
-    def get_patch_exceptions(self, fake_client, many_requests=False):
+    def get_patch_exceptions_x(self, fake_client, many_requests=False):
         result_patch = [
             patch.object(
                 type(self.SocialPostAccountX.account_id),

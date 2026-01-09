@@ -7,6 +7,9 @@ from unittest.mock import MagicMock, patch
 from odoo import Command
 from odoo.exceptions import ValidationError
 
+from odoo.addons.social_media_base.tests.test_social_common import (
+    PATCH_SOCIAL_BASE_UTILS,
+)
 from odoo.addons.social_media_linkedin.tests.test_common_linkedin import (
     PATCH_ACCOUNT_LINKEDIN,
     PATCH_POST_ACCOUNT_LINKEDIN,
@@ -343,5 +346,80 @@ class TestSocialPostLinkedin(TestSocialCommonLinkedin):
             self.SocialPostAccountLinkedin._delete_post_account()
         self.assertEqual(mock_request_linkedin.call_count, 2)
 
-    def test_action_campaign_group(self):
-        pass
+    def get_patch_advertising(self, advertising=False):
+        return patch.object(
+            type(self.SocialPostAccountLinkedin),
+            "_linkedin_advertising_accounts",
+            autospec=True,
+            return_value=advertising,
+        )
+
+    def test_not_action_campaign_group(self):
+        patch_advertising = self.get_patch_advertising()
+        with patch_advertising as mock_advertising_accounts:
+            self.SocialPostAccountLinkedin._action_campaign_group()
+            mock_advertising_accounts.assert_called_once()
+
+    def test_action_exist_campaign_group(self):
+        patch_advertising = self.get_patch_advertising(True)
+        fake_campaign_group = MagicMock()
+        fake_campaign_group.status_code = 200
+        patch_request_linkedin = self.get_patch_exceptions_linkedin(fake_campaign_group)
+        with (
+            patch_advertising as mock_advertising_accounts,
+            patch_request_linkedin as mock_request_linkedin,
+        ):
+            res = self.SocialPostAccountCampaignLinkedin._action_campaign_group()
+            self.assertEqual(
+                self.SocialPostCampaignLinkedin.campaign_id.campaign_group_id.linkedin_urn,
+                res,
+            )
+            mock_request_linkedin.assert_called_once()
+            mock_advertising_accounts.assert_called_once()
+
+    def test_create_new_campaign_group(self):
+        patch_advertising = self.get_patch_advertising(True)
+        patch_request_linkedin = self.get_patch_exceptions_linkedin(
+            side_effect=[
+                MagicMock(status_code=404),
+                MagicMock(
+                    status_code=201, headers={"Location": "/adCampaignGroupsV2/456"}
+                ),
+            ]
+        )
+        fake_timestamps = (111111, 222222)
+        with (
+            patch(
+                PATCH_SOCIAL_BASE_UTILS.format("_generate_timestamps"),
+                autospec=True,
+                return_value=fake_timestamps,
+            ),
+            patch_request_linkedin as mock_request,
+            patch_advertising as mock_ad_accounts,
+        ):
+            urn = self.SocialPostAccountCampaignLinkedin._action_campaign_group()
+            self.assertEqual(urn, "urn:li:sponsoredCampaignGroup:456")
+            self.assertEqual(
+                self.SocialCampaignGroupLinkedin.linkedin_urn,
+                "urn:li:sponsoredCampaignGroup:456",
+            )
+            self.assertEqual(mock_request.call_count, 2)
+            mock_ad_accounts.assert_called_once()
+
+    def test_campaign_group_error(self):
+        patch_advertising = self.get_patch_advertising(True)
+        patch_request_linkedin = self.get_patch_exceptions_linkedin(
+            side_effect=[
+                MagicMock(status_code=404),
+                MagicMock(status_code=400, headers={"error": "Invalid request"}),
+            ]
+        )
+        with (
+            patch_advertising as mock_ad_accounts,
+            patch_request_linkedin as mock_request_linkedin,
+        ):
+            with self.assertRaises(ValidationError) as e:
+                self.SocialPostAccountCampaignLinkedin._action_campaign_group()
+            self.assertIn("Error creating group campaign in Linkedin", str(e.exception))
+            mock_ad_accounts.assert_called_once()
+            self.assertEqual(mock_request_linkedin.call_count, 2)

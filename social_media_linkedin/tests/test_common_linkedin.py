@@ -2,6 +2,8 @@
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
 
 
+from unittest.mock import patch
+
 from odoo.fields import Command
 from odoo.tools import hmac
 
@@ -156,4 +158,19 @@ class TestSocialCommonLinkedin(TestSocialMediaBaseCommon):
             self.env(su=True),
             f"{self.media_linkedin_id.media_type}-account-{code_generated}-csrf-token",
             self.media_linkedin_id.id,
+        )
+
+    def get_patch_exceptions_linkedin(self, fake_client=False, side_effect=False):
+        if side_effect:
+            return patch.object(
+                type(self.SocialAccountLinkedin),
+                "_request_linkedin",
+                autospec=True,
+                side_effect=side_effect,
+            )
+        return patch.object(
+            type(self.SocialAccountLinkedin),
+            "_request_linkedin",
+            autospec=True,
+            return_value=fake_client,
         )
