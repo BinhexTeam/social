@@ -8,6 +8,7 @@ from odoo import Command
 from odoo.exceptions import ValidationError
 
 from odoo.addons.social_media_base.tests.test_social_common import (
+    PATCH_POST_ACCOUNT,
     PATCH_SOCIAL_BASE_UTILS,
 )
 from odoo.addons.social_media_linkedin.tests.test_common_linkedin import (
@@ -88,7 +89,7 @@ class TestSocialPostLinkedin(TestSocialCommonLinkedin):
         )
 
     @patch(PATCH_ACCOUNT_LINKEDIN.format("_request_linkedin"))
-    def test_like_success(self, mock_request):
+    def test_action_like_post(self, mock_request):
         author_urn = "urn:li:person:abc"
         mock_response = MagicMock()
         mock_response.status_code = 201
@@ -122,6 +123,11 @@ class TestSocialPostLinkedin(TestSocialCommonLinkedin):
         self.assertFalse(result["success"])
         self.assertEqual(result["message"], "Internal error occurred.")
 
+    def test_action_like_post_failed(self):
+        with patch(PATCH_POST_ACCOUNT.format("action_like_post")) as mock_like_super:
+            self.SocialPostAccount.action_like_post()
+            mock_like_super.assert_called_once()
+
     @patch(PATCH_ACCOUNT_LINKEDIN.format("_request_linkedin"))
     def test_get_comments_success(self, mock_request):
         mock_response = MagicMock()
@@ -153,6 +159,15 @@ class TestSocialPostLinkedin(TestSocialCommonLinkedin):
         self.assertEqual(result["data"], [])
 
     @patch(PATCH_ACCOUNT_LINKEDIN.format("_request_linkedin"))
+    def test_get_comments_failed(self, mock_request):
+        mock_response = MagicMock()
+        mock_response.status_code = 400
+        mock_request.return_value = mock_response
+        result = self.SocialPostAccountLinkedin.get_comments()
+        self.assertFalse(result["success"])
+        self.assertIn("ERROR GET COMMENTS LINKEDIN", result["message"])
+
+    @patch(PATCH_ACCOUNT_LINKEDIN.format("_request_linkedin"))
     @patch(PATCH_ACCOUNT_LINKEDIN.format("_prepare_images_for_post"))
     def test_create_linkedin_comment_success(self, mock_prepare_images, mock_request):
         mock_prepare_images.return_value = [{"media": "asset_123"}]
@@ -179,11 +194,8 @@ class TestSocialPostLinkedin(TestSocialCommonLinkedin):
         mock_request.return_value = mock_response
         post_data.update({"attachment_ids": []})
         result = self.SocialPostAccountLinkedin.create_linkedin_comment(post_data)
-        self.assertEqual(result["success"], False)
-        self.assertEqual(
-            result["message"],
-            "An error occurred while commenting, please try again later.",
-        )
+        self.assertFalse(result["success"])
+        self.assertIn("ERROR CREATE COMMENT LINKEDIN", result["message"])
 
     @patch(PATCH_ACCOUNT_LINKEDIN.format("_request_linkedin"))
     def test_delete_linkedin_comment_success(self, mock_request):

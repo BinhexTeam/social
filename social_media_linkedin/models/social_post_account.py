@@ -386,13 +386,10 @@ class SocialPostAccount(models.Model):
                     for comment in response_comments
                 ]
             else:
-                return_message = f"Error GET COMMENTS LINKEDIN: {response.json()}"
+                return_message = _("ERROR GET COMMENTS LINKEDIN: %(error)s") % {
+                    "error": response.json(),
+                }
                 _logger.error(return_message)
-                if not self.user_has_groups("base.group_no_one"):
-                    return_message = _(
-                        "An error occurred while retrieving comments, "
-                        "please try again later."
-                    )
                 return {
                     "success": False,
                     "message": return_message,
@@ -421,13 +418,10 @@ class SocialPostAccount(models.Model):
                 linkedin_v2=True,
             )
             if response.status_code != 201:
-                return_message = response.json().get("message", "")
-                _logger.error(f"ERROR CREATE COMMENT LINKEDIN: {return_message}")
-
-                if not self.user_has_groups("base.group_no_one"):
-                    return_message = _(
-                        "An error occurred while commenting, please try again later."
-                    )
+                return_message = _("ERROR CREATE COMMENT LINKEDIN: %(error)s") % {
+                    "error": response.json().get("message", ""),
+                }
+                _logger.error(return_message)
                 return {
                     "success": False,
                     "message": return_message,
