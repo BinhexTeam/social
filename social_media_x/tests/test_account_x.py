@@ -707,3 +707,10 @@ class TestSocialAccountX(TestSocialCommonX):
         self.assertEqual(res[2], 10)
         self.assertEqual(res[3], 15)
         self.assertEqual(res[4], 20)
+
+    def test_get_statistics(self):
+        statistics = ["Test", 1, 1, 10, 11, 12, 13]
+        with patch("odoo.models.BaseModel.search_read") as mock_search_read:
+            res = self.SocialAccountX._get_statistics(statistics)
+            self.assertTrue(res)
+            mock_search_read.assert_called_once()
