@@ -614,3 +614,65 @@ class TestSocialAccountX(TestSocialCommonX):
             mock_get.assert_called_once()
             mock_get_access_token_oauth2.assert_called_once()
             mock_notify_user_client.assert_called_once()
+
+    def test_create_account_x_exception_manyrequests(self):
+        fake_client = MagicMock()
+        fake_client.get_me.side_effect = self.get_exception_manyrequests()
+        (
+            mock_get_client_api,
+            mock_many_requests,
+        ) = self.get_patch_exceptions_x(fake_client, True, valid_time_request=False)
+        with (
+            mock_get_client_api,
+            mock_many_requests as many_requests,
+        ):
+            self.SocialAccount.create_account_x(
+                "x_access_token_oauth1", "x_access_secret_oauth1", {}
+            )
+        many_requests.assert_called_once()
+
+    def test_create_tweet(self):
+        fake_client = MagicMock()
+        fake_client.create_tweet.return_value.data = {"id": "tweet_idX"}
+        patch_get_client_api = self.get_patch_exceptions_x(
+            fake_client=fake_client, valid_time_request=False
+        )
+        with patch_get_client_api as mock_get_client_api, patch.object(
+            type(self.SocialAccount),
+            "_prepare_medias_for_tweet",
+            autospec=True,
+            return_value=[],
+        ) as mock_prepare_medias_for_tweet:
+            res = self.SocialAccount.create_tweet("Message Test", [], [], None, {})
+            self.assertEqual(res, "tweet_idX")
+            mock_get_client_api.assert_called_once()
+            mock_prepare_medias_for_tweet.assert_called_once()
+
+    def test_create_tweet_exception_manyrequests(self):
+        fake_client = MagicMock()
+        fake_client.create_tweet.side_effect = self.get_exception_manyrequests()
+        (
+            mock_get_client_api,
+            mock_many_requests,
+        ) = self.get_patch_exceptions_x(fake_client, True, valid_time_request=False)
+        with (
+            mock_get_client_api,
+            mock_many_requests as many_requests,
+        ):
+            self.SocialAccount.create_tweet("Message Test", [], [], None, {})
+        many_requests.assert_called_once()
+
+    def test_create_tweet_exception(self):
+        fake_client = MagicMock()
+        fake_client.create_tweet.side_effect = Exception("Error message")
+        mock_get_client_api = self.get_patch_exceptions_x(
+            fake_client=fake_client, valid_time_request=False
+        )
+        with (
+            mock_get_client_api,
+            patch.object(
+                type(self.social_account_id), "_notify_user_client", autospec=True
+            ) as mocked_notify,
+        ):
+            self.SocialAccount.create_tweet("Message Test", [], [], None, {})
+        mocked_notify.assert_called_once()
