@@ -9,7 +9,10 @@ from unittest.mock import MagicMock, Mock, patch
 from odoo import Command
 from odoo.exceptions import ValidationError
 
-from odoo.addons.social_media_base.tests.test_social_common import PATCH_WIZARD_ACCOUNT
+from odoo.addons.social_media_base.tests.test_social_common import (
+    PATCH_ACCOUNT,
+    PATCH_WIZARD_ACCOUNT,
+)
 
 from .test_common_x import (
     PATCH_ACCOUNT_X,
@@ -714,3 +717,109 @@ class TestSocialAccountX(TestSocialCommonX):
             res = self.SocialAccountX._get_statistics(statistics)
             self.assertTrue(res)
             mock_search_read.assert_called_once()
+
+    def test_update_posts_statistics(self):
+        patch_update_posts_statistics_super = patch(
+            PATCH_ACCOUNT.format("_update_posts_statistics")
+        )
+        patch_get_statistics = patch.object(
+            type(self.SocialAccount),
+            "_get_statistics",
+            autospec=True,
+            return_value=None,
+        )
+        fake_client = MagicMock()
+        fake_client.get_users_tweets.return_value.includes = {
+            "media": [
+                MagicMock(
+                    media_key="media_key_tests",
+                    url="https://media_url_tests",
+                    type="image",
+                )
+            ],
+            "users": [MagicMock(id="author_12345", username="username-idx")],
+        }
+        fake_client.get_users_tweets.return_value.data = [
+            MagicMock(
+                referenced_tweets=MagicMock(
+                    type="fake_quoted",
+                ),
+                in_reply_to_user_id=None,
+                conversation_id="conversation_12345",
+                id="conversation_12345",
+                author_id="author_12345",
+                entities=MagicMock(
+                    urls=["https://www.url1.com", "https://www.url2.com"]
+                ),
+            )
+        ]
+        patch_get_users_tweets = self.get_patch_exceptions_x(
+            fake_client=fake_client, valid_time_request=False
+        )
+
+        def search_side_effect(recordset, domain=None, *args, **kwargs):
+            if recordset._name == "social.post.account":
+                return self.SocialPostAccountX
+            return self.SocialAccountX
+
+        with (
+            patch_update_posts_statistics_super as mock_update_posts_statistics_super,
+            patch(
+                "odoo.models.BaseModel.search",
+                autospec=True,
+                side_effect=search_side_effect,
+            ) as mock_search,
+            patch.object(
+                type(self.SocialAccount),
+                "_valid_time_request",
+                autospec=True,
+                return_value=True,
+            ) as mock_valid_time_request,
+            patch.object(
+                type(self.SocialPostAccountX),
+                "_get_assets_save_x",
+                autospec=True,
+                return_value=True,
+            ) as mock_get_assets_save_x,
+            patch.object(
+                type(self.SocialAccount),
+                "_get_public_metrics",
+                autospec=True,
+                return_value=(5, 10, 15, 20, 25),
+            ) as mock_get_public_metrics,
+            patch_get_users_tweets as mock_get_users_tweets,
+            patch_get_statistics as mock_get_statistics,
+        ):
+            self.SocialAccount._update_posts_statistics(None, [])
+            self.assertEqual(self.SocialAccountX.like_count, 5)
+            self.assertEqual(self.SocialAccountX.impression_count, 10)
+            self.assertEqual(self.SocialAccountX.comment_count, 15)
+            self.assertEqual(self.SocialAccountX.retweet_count, 10)
+            self.assertEqual(self.SocialAccountX.quote_count, 25)
+
+            mock_update_posts_statistics_super.assert_called_once()
+            self.assertEqual(mock_search.call_count, 4)
+            mock_valid_time_request.assert_called_once()
+            mock_get_users_tweets.assert_called_once()
+            mock_get_assets_save_x.assert_called_once()
+            mock_get_public_metrics.assert_called_once()
+            mock_get_statistics.assert_called_once()
+
+    def test_update_posts_statistics_empty(self):
+        patch_update_posts_statistics_super = patch(
+            PATCH_ACCOUNT.format("_update_posts_statistics")
+        )
+        patch_get_statistics = patch.object(
+            type(self.SocialAccount),
+            "_get_statistics",
+            autospec=True,
+            return_value=None,
+        )
+
+        with (
+            patch_update_posts_statistics_super as mock_update_posts_statistics_super,
+            patch_get_statistics as mock_get_statistics,
+        ):
+            self.social_account_id._update_posts_statistics(None, [])
+            mock_update_posts_statistics_super.assert_called_once()
+            mock_get_statistics.assert_called_once()
