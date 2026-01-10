@@ -110,21 +110,27 @@ class TestSocialCommonX(TestSocialMediaBaseCommon):
         }
         return TooManyRequests(response=fake_resp)
 
-    def get_patch_exceptions_x(self, fake_client, many_requests=False):
-        result_patch = [
-            patch.object(
-                type(self.SocialPostAccountX.account_id),
-                "get_client_api",
-                autospec=True,
-                return_value=fake_client,
-            ),
-            patch.object(
-                type(self.SocialPostAccountX.account_id),
-                "_valid_time_request",
-                autospec=True,
-                return_value=True,
-            ),
-        ]
+    def get_patch_exceptions_x(
+        self, fake_client, many_requests=False, valid_time_request=True
+    ):
+        patch_client = patch.object(
+            type(self.SocialPostAccountX.account_id),
+            "get_client_api",
+            autospec=True,
+            return_value=fake_client,
+        )
+        if not many_requests and not valid_time_request:
+            return patch_client
+        result_patch = [patch_client]
+        if valid_time_request:
+            result_patch.append(
+                patch.object(
+                    type(self.SocialPostAccountX.account_id),
+                    "_valid_time_request",
+                    autospec=True,
+                    return_value=True,
+                )
+            )
         if many_requests:
             result_patch.append(
                 patch.object(
@@ -134,4 +140,5 @@ class TestSocialCommonX(TestSocialMediaBaseCommon):
                     return_value=False,
                 )
             )
-        return tuple(result_patch)
+        result = result_patch if len(result_patch) > 1 else result_patch[0]
+        return tuple(result)

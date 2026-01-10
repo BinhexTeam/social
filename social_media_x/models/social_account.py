@@ -343,7 +343,6 @@ class SocialAccount(models.Model):
                         acc_count.write(values)
                 else:
                     message_error = "Not create account: Not get access token OAuth2"
-
                     self._notify_user_client(
                         notif_type="social_kanban_danger",
                         notif_message=message_error,

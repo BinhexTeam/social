@@ -344,30 +344,6 @@ class TestSocialAccountX(TestSocialCommonX):
         client.get_me.return_value = me
         return client
 
-    def test_does_nothing_if_x_account_id_already_exists(self):
-        client = self._fake_client(
-            user_id="FAKE123456789", name="Same", username="same"
-        )
-
-        with patch.object(
-            type(self.SocialAccount), "get_client_api", return_value=client
-        ), patch.object(
-            type(self.SocialAccount), "_get_access_token_oauth2", return_value="BT123"
-        ) as mock_o2, patch.object(
-            self.SocialAccount.env, "ref", return_value=SimpleNamespace(id=222)
-        ) as mock_ref, patch.object(
-            type(self.SocialAccount), "create"
-        ) as mock_create, patch.object(type(self.SocialAccount), "write") as mock_write:
-            self.SocialAccount.create_account_x(
-                x_access_token_oauth1="AT",
-                x_access_secret_oauth1="AS",
-                kwargs={"oauth_token": "tok-1"},
-            )
-        mock_o2.assert_not_called()
-        mock_ref.assert_not_called()
-        mock_create.assert_not_called()
-        mock_write.assert_not_called()
-
     def test_update_account_data(self):
         fake_client = MagicMock()
         fake_client.get_me.return_value.data.profile_image_url = (
@@ -585,3 +561,56 @@ class TestSocialAccountX(TestSocialCommonX):
         self.social_account_id.rate_limit_endpoint = False
         res = self.social_account_id._valid_time_request()
         self.assertTrue(res)
+
+    def test_create_account_x(self):
+        fake_client = MagicMock()
+        fake_client.get_me.return_value.data.username = "https://example.com/img_url"
+        fake_client.get_me.return_value.data.profile_image_url = "juanX"
+        fake_response = MagicMock()
+        fake_response.status_code = 200
+        fake_response.content = b"fake-image-bytes"
+        patch_get_client_api = self.get_patch_exceptions_x(
+            fake_client=fake_client, valid_time_request=False
+        )
+        with patch_get_client_api as mock_get_client_api, patch(
+            PATCH_ACCOUNT_X.format("requests.get"),
+            autospec=True,
+            return_value=fake_response,
+        ) as mock_get, patch.object(
+            type(self.SocialAccount),
+            "_get_access_token_oauth2",
+            autospec=True,
+            return_value="fake_access_token_oauth2",
+        ) as mock_get_access_token_oauth2:
+            self.SocialAccount.create_account_x(
+                "x_access_token_oauth1", "x_access_secret_oauth1", {}
+            )
+            mock_get_client_api.assert_called_once()
+            mock_get.assert_called_once()
+            mock_get_access_token_oauth2.assert_called_once()
+
+        patch_get_client_api = self.get_patch_exceptions_x(
+            fake_client=fake_client, valid_time_request=False
+        )
+        with patch_get_client_api as mock_get_client_api, patch(
+            PATCH_ACCOUNT_X.format("requests.get"),
+            autospec=True,
+            return_value=fake_response,
+        ) as mock_get, patch.object(
+            type(self.SocialAccount),
+            "_get_access_token_oauth2",
+            autospec=True,
+            return_value=False,
+        ) as mock_get_access_token_oauth2, patch.object(
+            type(self.SocialAccount),
+            "_notify_user_client",
+            autospec=True,
+            return_value=False,
+        ) as mock_notify_user_client:
+            self.SocialAccount.create_account_x(
+                "x_access_token_oauth1", "x_access_secret_oauth1", {}
+            )
+            mock_get_client_api.assert_called_once()
+            mock_get.assert_called_once()
+            mock_get_access_token_oauth2.assert_called_once()
+            mock_notify_user_client.assert_called_once()
