@@ -676,3 +676,34 @@ class TestSocialAccountX(TestSocialCommonX):
         ):
             self.SocialAccount.create_tweet("Message Test", [], [], None, {})
         mocked_notify.assert_called_once()
+
+    def test_get_users_tweets(self):
+        fake_client = MagicMock()
+        fake_client.get_users_tweets.return_value.includes = {
+            "media": [self.image_base64]
+        }
+        patch_get_client_api = self.get_patch_exceptions_x(
+            fake_client=fake_client, valid_time_request=False
+        )
+        with (
+            patch_get_client_api as mock_get_client_api,
+        ):
+            res = self.SocialAccountX._get_users_tweets()
+            self.assertEqual(len(res.includes.get("media")), 1)
+        mock_get_client_api.assert_called_once()
+
+    def test_get_public_metrics(self):
+        mock_public_metrics = MagicMock()
+        mock_public_metrics.public_metrics = {
+            "like_count": 5,
+            "reply_count": 10,
+            "retweet_count": 15,
+            "quote_count": 20,
+            "impression_count": 40,
+        }
+        res = self.SocialAccountX._get_public_metrics(mock_public_metrics)
+        self.assertEqual(res[0], 5)
+        self.assertEqual(res[1], 40)
+        self.assertEqual(res[2], 10)
+        self.assertEqual(res[3], 15)
+        self.assertEqual(res[4], 20)

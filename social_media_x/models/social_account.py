@@ -444,8 +444,6 @@ class SocialAccount(models.Model):
         return client_api.get_users_tweets(
             id=self.x_account_id,
             max_results=100,
-            # start_time="2025-11-01T00:00:00Z",
-            # end_time="2025-12-30T23:59:59Z",
             tweet_fields=[
                 "id",
                 "text",
