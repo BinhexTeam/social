@@ -622,22 +622,6 @@ class SocialAccount(models.Model):
                 _logger.error(f"Error Get Tweets: {e}")
         return self._get_statistics(statistics)
 
-    def _action_valid_add_account(self):
-        result = super()._action_valid_add_account()
-        if self.media_type == "x":
-            if (
-                self.env["social.account"].search_count(
-                    [
-                        ("media_type", "=", "x"),
-                        ("x_api_key", "=", self.x_api_key),
-                        ("x_api_secret", "=", self.x_api_secret),
-                    ]
-                )
-                == 0
-            ):
-                return False
-        return result
-
     def update_account(self):
         res = super().update_account()
         if self.media_type == "x":

@@ -375,7 +375,7 @@ class TestSocialAccountX(TestSocialCommonX):
             mock_write.assert_called()
             self.assertTrue(self.social_account_id.image_1920)
 
-    def test_update_account(self):
+    def test_wizard_update_account(self):
         with patch(
             PATCH_WIZARD_ACCOUNT.format("_update_account")
         ) as mock_updt_account_super:
@@ -405,7 +405,7 @@ class TestSocialAccountX(TestSocialCommonX):
             self.assertEqual(result["url"], "https://example.com")
             self.assertEqual(result["target"], "self")
 
-    def test_action_valid_add_account(self):
+    def test_wizard_action_valid_add_account(self):
         wizard_id = self.WizardAccount.create(
             {
                 "x_api_key": "TEST_KEY1",
@@ -823,3 +823,16 @@ class TestSocialAccountX(TestSocialCommonX):
             self.social_account_id._update_posts_statistics(None, [])
             mock_update_posts_statistics_super.assert_called_once()
             mock_get_statistics.assert_called_once()
+
+    def test_update_account(self):
+        patch_update_account_super = patch(PATCH_ACCOUNT.format("update_account"))
+        with patch_update_account_super as mock_update_account_super:
+            res = self.SocialAccountX.update_account()
+            self.assertTrue(res["context"]["default_x_api_key"])
+            self.assertTrue(res["context"]["default_x_api_secret"])
+            mock_update_account_super.assert_called_once()
+
+        with patch_update_account_super as mock_update_account_super:
+            self.SocialAccount.update_account()
+            self.assertTrue(res["context"])
+            mock_update_account_super.assert_called_once()
