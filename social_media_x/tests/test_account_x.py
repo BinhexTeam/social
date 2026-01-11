@@ -719,9 +719,7 @@ class TestSocialAccountX(TestSocialCommonX):
             mock_search_read.assert_called_once()
 
     def test_update_posts_statistics(self):
-        patch_update_posts_statistics_super = patch(
-            PATCH_ACCOUNT.format("_update_posts_statistics")
-        )
+        patch_super = patch(PATCH_ACCOUNT.format("_update_posts_statistics"))
         patch_get_statistics = patch.object(
             type(self.SocialAccount),
             "_get_statistics",
@@ -763,7 +761,7 @@ class TestSocialAccountX(TestSocialCommonX):
             return self.SocialAccountX
 
         with (
-            patch_update_posts_statistics_super as mock_update_posts_statistics_super,
+            patch_super as mock_update_posts_statistics_super,
             patch(
                 "odoo.models.BaseModel.search",
                 autospec=True,
@@ -806,9 +804,7 @@ class TestSocialAccountX(TestSocialCommonX):
             mock_get_statistics.assert_called_once()
 
     def test_update_posts_statistics_empty(self):
-        patch_update_posts_statistics_super = patch(
-            PATCH_ACCOUNT.format("_update_posts_statistics")
-        )
+        patch_super = patch(PATCH_ACCOUNT.format("_update_posts_statistics"))
         patch_get_statistics = patch.object(
             type(self.SocialAccount),
             "_get_statistics",
@@ -817,7 +813,7 @@ class TestSocialAccountX(TestSocialCommonX):
         )
 
         with (
-            patch_update_posts_statistics_super as mock_update_posts_statistics_super,
+            patch_super as mock_update_posts_statistics_super,
             patch_get_statistics as mock_get_statistics,
         ):
             self.social_account_id._update_posts_statistics(None, [])
@@ -825,14 +821,65 @@ class TestSocialAccountX(TestSocialCommonX):
             mock_get_statistics.assert_called_once()
 
     def test_update_account(self):
-        patch_update_account_super = patch(PATCH_ACCOUNT.format("update_account"))
-        with patch_update_account_super as mock_update_account_super:
+        patch_super = patch(PATCH_ACCOUNT.format("update_account"))
+        with patch_super as mock_update_account_super:
             res = self.SocialAccountX.update_account()
             self.assertTrue(res["context"]["default_x_api_key"])
             self.assertTrue(res["context"]["default_x_api_secret"])
             mock_update_account_super.assert_called_once()
 
-        with patch_update_account_super as mock_update_account_super:
+        with patch_super as mock_update_account_super:
             self.SocialAccount.update_account()
             self.assertTrue(res["context"])
             mock_update_account_super.assert_called_once()
+
+    def test_get_chart_account_statistics_empty(self):
+        patch_super = patch(PATCH_ACCOUNT.format("_get_chart_account_statistics"))
+        with patch(
+            "odoo.models.BaseModel.search", autospec=True, return_value=[]
+        ) as mock_search, patch_super as mock_super:
+            self.SocialAccount._get_chart_account_statistics(None, None, None)
+            self.assertEqual(mock_search.call_count, 2)
+            mock_super.assert_called_once()
+
+    def test_get_chart_account_statistics(self):
+        patch_super = patch(PATCH_ACCOUNT.format("_get_chart_account_statistics"))
+        patch_get_default_filter_date = patch(
+            PATCH_ACCOUNT.format("_get_default_filter_date"),
+            autospec=True,
+            return_value=(datetime.now(), datetime.now() + timedelta(days=7)),
+        )
+        patch_map_chart_statistics = patch(
+            PATCH_ACCOUNT.format("_map_chart_statistics")
+        )
+        fake_client = MagicMock()
+        fake_client.get_users_tweets.return_value.data = [
+            MagicMock(id="conversation_12345")
+        ]
+        patch_get_users_tweets = self.get_patch_exceptions_x(
+            fake_client=fake_client, valid_time_request=False
+        )
+        with (
+            patch(
+                "odoo.models.BaseModel.search",
+                autospec=True,
+                return_value=self.SocialAccountX,
+            ) as mock_search,
+            patch_map_chart_statistics as mock_map_chart_statistics,
+            patch_super as mock_super,
+            patch_get_default_filter_date as mock_get_default_filter_date,
+            patch.object(
+                type(self.SocialAccount),
+                "_get_public_metrics",
+                autospec=True,
+                return_value=(5, 10, 15, 20, 25),
+            ) as mock_get_public_metrics,
+            patch_get_users_tweets as mock_get_users_tweets,
+        ):
+            self.SocialAccount._get_chart_account_statistics(None, None, None)
+            self.assertEqual(mock_search.call_count, 2)
+            mock_map_chart_statistics.assert_called_once()
+            mock_super.assert_called_once()
+            self.assertEqual(mock_get_default_filter_date.call_count, 3)
+            mock_get_public_metrics.assert_called_once()
+            mock_get_users_tweets.assert_called_once()
